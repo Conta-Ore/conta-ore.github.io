@@ -3,294 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Conta Ore · Salva turni</title>
-<meta name="description" content="Salva i tuoi turni dal portale con un tocco.">
+<title>Conta Ore</title>
+<meta name="description" content="I tuoi turni, salvati sul tuo telefono.">
 <meta name="theme-color" content="#111821">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Conta Ore">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--ink:#131a24;--muted:#6a7c93;--bg:#eceff5;--card:#fff;--card-2:#f5f7fb;--line:#dbe2ec;--cambio:#fdf3d7;--no:#b45309}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e9eef6;--muted:#7e91aa;--bg:#0b1016;--card:#161e28;--card-2:#1d2732;--line:#2b3746;--cambio:#3a2f12;--no:#fbbf24}}
-:root[data-theme="dark"]{--ink:#e9eef6;--muted:#7e91aa;--bg:#0b1016;--card:#161e28;--card-2:#1d2732;--line:#2b3746;--cambio:#3a2f12;--no:#fbbf24}
+:root{--ink:#131a24;--muted:#64748b;--bg:#eceff5;--card:#fff;--line:#dbe2ec;--cambio:#fdf3d7;--no:#b45309;--ok:#15803d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e9eef6;--muted:#94a3b8;--bg:#0b1016;--card:#161e28;--line:#2b3746;--cambio:#3a2f12;--no:#fbbf24;--ok:#4ade80}}
+:root[data-theme="dark"]{--ink:#e9eef6;--muted:#94a3b8;--bg:#0b1016;--card:#161e28;--line:#2b3746;--cambio:#3a2f12;--no:#fbbf24;--ok:#4ade80}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{background:#111821;color:#fff;padding:16px;display:flex;align-items:center;gap:12px}
-header img{width:40px;height:40px;border-radius:10px}
-header h1{margin:0;font:700 22px/1.1 system-ui,sans-serif}
-main{max-width:640px;margin:0 auto;padding:0 16px 40px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:#111821;color:#fff;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;display:flex;align-items:center;gap:10px}
+header img{width:34px;height:34px;border-radius:9px}
+header h1{margin:0;font:700 21px/1 system-ui,sans-serif;flex:1}
+main{max-width:600px;margin:0 auto;padding:0 16px calc(32px + env(safe-area-inset-bottom))}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:14px;padding:16px}
-.card h2{margin:0 0 8px;font-size:18px}
-ol{margin:0;padding-left:22px}
-li{margin:6px 0}
-.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin-top:12px;padding:12px;border-radius:12px;border:0;background:var(--ink);color:var(--card);font:600 16px system-ui,sans-serif;cursor:pointer;text-decoration:none}
-.tabs{display:flex;gap:6px;margin-bottom:10px}
-.tabs button{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card-2);color:var(--ink);font:600 14px system-ui,sans-serif}
-.tabs button[aria-selected="true"]{background:var(--ink);color:var(--card)}
-textarea{position:absolute;left:-9999px}
-.drop{border:2px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted);cursor:pointer}
+label{display:block;font-weight:600;margin-top:10px}
+input{width:100%;margin-top:6px;padding:13px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--ink);font:16px system-ui,sans-serif}
+.btn{display:block;width:100%;margin-top:14px;padding:14px;border-radius:12px;border:0;background:var(--ink);color:var(--card);font:600 17px system-ui,sans-serif;cursor:pointer}
+.btn.chiaro{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .msg{margin-top:8px;font-size:14px;color:var(--muted)}
-table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:10px}
-td{padding:7px 4px;border-top:1px solid var(--line);vertical-align:top}
-td.n{white-space:nowrap;font-variant-numeric:tabular-nums}
-tr.cambio td{background:var(--cambio)}
-.prima{font-size:13px;color:var(--muted)}
-details summary{cursor:pointer;font-weight:700;font-size:18px}
-code{font-size:14px}
+.stato{margin-top:14px;font-size:15px;font-weight:600;color:var(--ok)}
+.stato.no{color:var(--no)}
+h2{margin:18px 0 6px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.giorno{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}
+.giorno.cambiato{background:var(--cambio)}
+.giorno.libero .o{color:var(--muted);font-weight:500}
+.g{font-size:13px;font-weight:700;text-transform:uppercase;color:var(--muted)}
+.o{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+.s{font-size:14px;color:var(--muted)}
+.prima{font-size:13px;color:var(--no);margin-top:2px}
+.piede{display:flex;gap:10px;margin-top:6px}
+.piede button{flex:1;margin-top:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--muted);font:14px system-ui,sans-serif}
 </style>
 </head>
 <body>
-<header>
-  <img src="icons/icon-192.png" alt="">
-  <h1>Conta Ore</h1>
-</header>
+<header><img src="icons/icon-192.png" alt=""><h1>Conta Ore</h1></header>
 <main>
-
-<div class="card">
-  <h2>Salva turni</h2>
-  <div class="tabs" role="tablist">
-    <button type="button" role="tab" aria-selected="true" data-os="and">Android</button>
-    <button type="button" role="tab" aria-selected="false" data-os="ios">iPhone</button>
-    <button type="button" role="tab" aria-selected="false" data-os="pc">Computer</button>
+  <div class="card" id="installa" hidden>
+    <div id="inst-ios" hidden>Per averla come app: tocca <b>Condividi</b> (il quadrato con la freccia ↑) e poi <b>Aggiungi alla schermata Home</b>.</div>
+    <button type="button" class="btn" id="inst-and" hidden>Installa sul telefono</button>
   </div>
-  <div data-pane="and">
-    <ol>
-      <li>Tocca <b>Copia</b> qui sotto.</li>
-      <li>In Chrome tocca ⋮ e la stella ☆, poi <b>Modifica</b>.</li>
-      <li>Nome: <b>Salva turni</b>. Indirizzo: cancella tutto e incolla.</li>
-    </ol>
-    <p><b>Per usarlo:</b> sulla pagina dei turni tocca la barra degli indirizzi, scrivi <b>salva turni</b> e tocca il preferito con la stellina. Dall'elenco dei preferiti Chrome non lo fa partire.</p>
-  </div>
-  <div data-pane="ios" hidden>
-    <ol>
-      <li>Tocca <b>Copia</b> qui sotto.</li>
-      <li>In Safari tocca ↑ e <b>Aggiungi segnalibro</b>.</li>
-      <li>Apri i segnalibri, <b>Modifica</b> quello nuovo. Nome: <b>Salva turni</b>. Indirizzo: cancella tutto e incolla.</li>
-    </ol>
-    <p><b>Per usarlo:</b> sulla pagina dei turni apri i segnalibri e tocca <b>Salva turni</b>.</p>
-  </div>
-  <div data-pane="pc" hidden>
-    <ol>
-      <li>Trascina questo pulsante nella barra dei preferiti.</li>
-    </ol>
-    <a class="btn" id="bm-link" href="#">Salva turni</a>
-  </div>
-  <button type="button" class="btn" id="bm-copia">Copia</button>
-  <div id="bm-msg" class="msg"></div>
-  <textarea id="bm-codice" readonly tabindex="-1" aria-hidden="true"></textarea>
-</div>
 
-<div class="card">
-  <h2>Come si usa</h2>
-  <ol>
-    <li>Entra nel portale e apri la pagina dei turni.</li>
-    <li>Apri <b>Salva turni</b>, come scritto sopra.</li>
-    <li>Compare la foto dei turni con gli orari: tocca <b>Salva o invia</b> per tenerla o mandarla su WhatsApp o per email.</li>
-  </ol>
-  <p class="msg">Prova: apri Salva turni su questa pagina. Se compare «Apri la pagina dei turni», il segnalibro funziona.</p>
-</div>
+  <section id="accesso" hidden>
+    <div class="card">
+      <label for="codice">Codice operatore</label>
+      <input id="codice" autocomplete="username" autocapitalize="characters" placeholder="es. HRM-0042">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <button type="button" class="btn" id="entra">Entra</button>
+      <div class="msg" id="acc-msg"></div>
+      <div class="msg">Codice e password restano su questo telefono: servono solo per entrare nel portale dei turni.</div>
+    </div>
+  </section>
 
-<div class="card">
-  <h2>I tuoi turni</h2>
-  <div class="drop" id="drop" tabindex="0" role="button">Carica le foto salvate<input type="file" id="file" accept=".png,.json,image/png,application/json" multiple hidden></div>
-  <div id="arch-msg" class="msg"></div>
-  <div id="arch"></div>
-</div>
-
-<div class="card">
-  <details>
-    <summary>Turni per email</summary>
-    <p>Ogni email coi turni viene salvata da sola sul tuo Google Drive, nella cartella <b>Turni salvati</b>.</p>
-    <ol>
-      <li>Dal computer apri <a href="https://script.google.com/home/start" target="_blank" rel="noopener">script.google.com</a> e crea un <b>Nuovo progetto</b>.</li>
-      <li>Cancella tutto, incolla il codice e salva.</li>
-      <li>Scegli <b>installa</b>, premi <b>Esegui</b> e concedi i permessi.</li>
-    </ol>
-    <button type="button" class="btn" id="gs-copia">Copia il codice</button>
-    <div id="gs-msg" class="msg"></div>
-    <textarea id="gs-codice" readonly tabindex="-1" aria-hidden="true"></textarea>
-  </details>
-</div>
-
+  <section id="turni" hidden>
+    <div class="stato" id="stato"></div>
+    <div id="lista"></div>
+    <button type="button" class="btn" id="invia">Invia su WhatsApp o email</button>
+    <div class="msg" id="copie"></div>
+    <div class="piede">
+      <button type="button" id="archivio">Esporta tutte le copie</button>
+      <button type="button" id="esci">Esci</button>
+    </div>
+  </section>
 </main>
-<script>
-(function () {
-  'use strict';
-  var $ = function (id) { return document.getElementById(id); };
-  var SITO = location.origin + location.pathname.replace(/[^/]*$/, '');
-
-  var BM = "javascript:(function(){var s=document.createElement('script');s.src='" + SITO + "st.js?v='+Date.now();s.onerror=function(){alert('Salva turni: controlla la connessione.')};document.body.appendChild(s)})()";
-  $('bm-codice').value = BM;
-  $('bm-link').setAttribute('href', BM);
-  $('bm-link').addEventListener('click', function (e) { e.preventDefault(); $('bm-msg').textContent = 'Trascinalo nella barra dei preferiti.'; });
-  function copia(testo, campo, dove) {
-    var fatto = function () { $(dove).textContent = 'Copiato.'; };
-    var manuale = function () { var t = $(campo); t.select(); try { document.execCommand('copy'); fatto(); } catch (e) { $(dove).textContent = 'Non riesco a copiare.'; } };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(testo).then(fatto, manuale); else manuale();
-  }
-  $('bm-copia').onclick = function () { copia(BM, 'bm-codice', 'bm-msg'); };
-  Array.prototype.forEach.call(document.querySelectorAll('[data-os]'), function (b) {
-    b.onclick = function () {
-      Array.prototype.forEach.call(document.querySelectorAll('[data-os]'), function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
-      Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-os'); });
-      $('bm-copia').hidden = b.getAttribute('data-os') === 'pc';
-    };
-  });
-  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) document.querySelector('[data-os="ios"]').click();
-  else if (!/Android/.test(navigator.userAgent)) document.querySelector('[data-os="pc"]').click();
-
-  $('gs-codice').value = [
-    "const CERCA = 'subject:turni has:attachment';",
-    "const NOME = 'Turni salvati';",
-    "",
-    "function salvaTurni() {",
-    "  const etichetta = GmailApp.getUserLabelByName(NOME) || GmailApp.createLabel(NOME);",
-    "  const cartelle = DriveApp.getFoldersByName(NOME);",
-    "  const cartella = cartelle.hasNext() ? cartelle.next() : DriveApp.createFolder(NOME);",
-    "  GmailApp.search(CERCA + ' -label:\"' + NOME + '\"', 0, 50).forEach(function (c) {",
-    "    c.getMessages().forEach(function (m) {",
-    "      const quando = Utilities.formatDate(m.getDate(), 'Europe/Rome', 'yyyy-MM-dd_HHmmss');",
-    "      m.getAttachments({includeInlineImages: false}).forEach(function (a) {",
-    "        cartella.createFile(a.copyBlob()).setName(quando + '_' + a.getName());",
-    "      });",
-    "      cartella.createFile(Utilities.newBlob(m.getRawContent(), 'message/rfc822', quando + '_email.eml'));",
-    "    });",
-    "    c.addLabel(etichetta);",
-    "  });",
-    "}",
-    "",
-    "function installa() {",
-    "  ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });",
-    "  ScriptApp.newTrigger('salvaTurni').timeBased().everyMinutes(15).create();",
-    "  salvaTurni();",
-    "}"
-  ].join('\n');
-  $('gs-copia').onclick = function () { copia($('gs-codice').value, 'gs-codice', 'gs-msg'); };
-
-  var DB = null;
-  function apriDB() {
-    return new Promise(function (ok, ko) {
-      if (DB) return ok(DB);
-      var r = indexedDB.open('salva-turni', 1);
-      r.onupgradeneeded = function () { r.result.createObjectStore('copie', { keyPath: 'chiave' }); };
-      r.onsuccess = function () { DB = r.result; ok(DB); };
-      r.onerror = function () { ko(r.error); };
-    });
-  }
-  function tutte() {
-    return apriDB().then(function (db) { return new Promise(function (ok, ko) {
-      var r = db.transaction('copie').objectStore('copie').getAll(); r.onsuccess = function () { ok(r.result || []); }; r.onerror = function () { ko(r.error); };
-    }); });
-  }
-  function metti(c) {
-    return apriDB().then(function (db) { return new Promise(function (ok) {
-      var tx = db.transaction('copie', 'readwrite'), doppia = false;
-      var r = tx.objectStore('copie').add(c);
-      r.onerror = function (e) { if (r.error && r.error.name === 'ConstraintError') { doppia = true; e.preventDefault(); } };
-      tx.oncomplete = function () { ok(doppia ? 'doppia' : 'nuova'); };
-      tx.onabort = function () { ok(doppia ? 'doppia' : 'errore'); };
-    }); });
-  }
-  var DATA = /^\d{4}-\d{2}-\d{2}$/, ORA = /^\d{1,2}:\d{2}$/;
-  function pulisci(c, provenienza) {
-    if (!c || typeof c !== 'object' || !Array.isArray(c.turni) || typeof c.salvato_il !== 'string') return null;
-    var turni = c.turni.filter(function (t) { return t && DATA.test(String(t.data)); }).map(function (t) {
-      var ind = t.indirizzoServizio && typeof t.indirizzoServizio === 'object' ? t.indirizzoServizio : {};
-      return { id: String(t.id == null ? '' : t.id).slice(0, 20), data: String(t.data), oraInizio: ORA.test(String(t.oraInizio)) ? String(t.oraInizio) : '',
-        oraFine: ORA.test(String(t.oraFine)) ? String(t.oraFine) : '', tipo: String(t.tipoGiornata || '').slice(0, 20),
-        servizio: String(t.servizio || '').trim().slice(0, 80), dove: [ind.indirizzo, ind.citta].filter(Boolean).join(', ').slice(0, 120),
-        note: String(t.note || '').slice(0, 80), minuti: +t.minutiTurno || 0 };
-    });
-    if (!turni.length) return null;
-    return { chiave: c.salvato_il + '|' + (c.operatore || ''), salvato_il: c.salvato_il.slice(0, 32), operatore: String(c.operatore || '').slice(0, 20),
-      settimana_dal: DATA.test(String(c.settimana_dal)) ? c.settimana_dal : turni[0].data, pagina: String(c.pagina || '').slice(0, 200),
-      arrivata_da: String(provenienza || '').slice(0, 200), archiviata_il: new Date().toISOString(),
-      sha_pagina: /^[0-9a-f]{64}$/.test(String(c.sha256_pagina_originale)) ? c.sha256_pagina_originale : null,
-      pagina_originale: typeof c.pagina_originale === 'string' ? c.pagina_originale.slice(0, 400000) : null, turni: turni };
-  }
-  function datiDaPng(buf) {
-    var u = new Uint8Array(buf), dv = new DataView(buf), i = 8;
-    if (u[1] !== 0x50 || u[2] !== 0x4e || u[3] !== 0x47) return null;
-    while (i + 8 <= u.length) {
-      var len = dv.getUint32(i), tipo = String.fromCharCode(u[i + 4], u[i + 5], u[i + 6], u[i + 7]);
-      if (tipo === 'iTXt') {
-        var corpo = u.subarray(i + 8, i + 8 + len), z = corpo.indexOf(0);
-        if (new TextDecoder().decode(corpo.subarray(0, z)) === 'salva-turni') {
-          var j = z + 3; j = corpo.indexOf(0, j) + 1; j = corpo.indexOf(0, j) + 1;
-          try { return JSON.parse(new TextDecoder().decode(corpo.subarray(j))); } catch (e) { return null; }
-        }
-      }
-      if (tipo === 'IEND') break;
-      i += 12 + len;
-    }
-    return null;
-  }
-  function caricaFile(files) {
-    var conto = { nuova: 0, doppia: 0, altro: 0 };
-    var giri = Array.prototype.map.call(files, function (f) {
-      return f.arrayBuffer().then(function (buf) {
-        var c = null;
-        if (/\.png$/i.test(f.name) || f.type === 'image/png') c = datiDaPng(buf);
-        else { try { c = JSON.parse(new TextDecoder().decode(buf)); } catch (e) { c = null; } }
-        var p = pulisci(c, 'file ' + f.name);
-        if (!p) { conto.altro++; return; }
-        return metti(p).then(function (esito) { conto[esito === 'nuova' || esito === 'doppia' ? esito : 'altro']++; });
-      });
-    });
-    Promise.all(giri).then(function () {
-      var parti = [];
-      if (conto.nuova) parti.push(conto.nuova === 1 ? '1 foto nuova' : conto.nuova + ' foto nuove');
-      if (conto.doppia) parti.push(conto.doppia + ' già presenti');
-      if (conto.altro) parti.push(conto.altro + ' senza turni');
-      $('arch-msg').textContent = parti.join(' · ');
-      mostra();
-    });
-  }
-  $('drop').onclick = function () { $('file').click(); };
-  $('drop').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
-  $('file').onchange = function (e) { caricaFile(e.target.files); e.target.value = ''; };
-  ['dragenter', 'dragover'].forEach(function (ev) { $('drop').addEventListener(ev, function (e) { e.preventDefault(); }); });
-  $('drop').addEventListener('drop', function (e) { e.preventDefault(); caricaFile(e.dataTransfer.files); });
-
-  var GG = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
-  var giorno = function (d) { var x = new Date(d + 'T12:00:00'); return GG[x.getDay()] + ' ' + d.slice(8, 10) + '/' + d.slice(5, 7); };
-  var orario = function (t) { return t.tipo === 'TURNO' ? t.oraInizio + '–' + t.oraFine : (t.tipo || '').toLowerCase(); };
-  var quando = function (iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7) + ' ' + iso.slice(11, 16); };
-  function td(testo, cls) { var c = document.createElement('td'); if (cls) c.className = cls; c.textContent = testo; return c; }
-  function mostra() {
-    tutte().then(function (copie) {
-      var box = $('arch'); box.textContent = '';
-      if (!copie.length) return;
-      copie.sort(function (a, b) { return a.salvato_il < b.salvato_il ? -1 : 1; });
-      var storia = {};
-      copie.forEach(function (c) {
-        c.turni.forEach(function (t) {
-          var s = storia[t.data] = storia[t.data] || [];
-          var firma = orario(t) + ' ' + t.servizio;
-          if (!s.length || s[s.length - 1].firma !== firma) s.push({ firma: firma, t: t, visto: c.salvato_il });
-        });
-      });
-      var tab = document.createElement('table');
-      Object.keys(storia).sort().reverse().forEach(function (d) {
-        var s = storia[d], ult = s[s.length - 1];
-        var tr = document.createElement('tr'); if (s.length > 1) tr.className = 'cambio';
-        tr.appendChild(td(giorno(d), 'n'));
-        tr.appendChild(td(orario(ult.t) + (ult.t.minuti ? ' · ' + String(ult.t.minuti / 60).replace('.', ',') + ' h' : ''), 'n'));
-        var sv = td(ult.t.servizio || '');
-        s.slice(0, -1).forEach(function (x) {
-          var b = document.createElement('div'); b.className = 'prima';
-          b.textContent = 'prima: ' + x.firma.trim() + ' (' + quando(x.visto) + ')';
-          sv.appendChild(b);
-        });
-        tr.appendChild(sv);
-        tab.appendChild(tr);
-      });
-      box.appendChild(tab);
-    }).catch(function () { $('arch').textContent = 'Archivio non disponibile in questo browser.'; });
-  }
-  mostra();
-})();
-</script>
+<script src="config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
