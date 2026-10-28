@@ -1,13 +1,14 @@
 // Conta Ore · ponte
 // Passa al portale dei turni le richieste dell'app e le restituisce. Non salva niente: né credenziali, né turni.
 // Variabili: PORTALE (indirizzo del portale, es. https://turni.esempio.it), ORIGINI (siti ammessi, separati da virgola).
+const PORTALE_PREDEFINITO = '';
 const UA = { 'user-agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36' };
 
+const ammessi = env => String(env.ORIGINI || 'https://conta-ore.github.io').split(',').map(s => s.trim()).filter(Boolean);
 function cors(req, env) {
-  const ammessi = String(env.ORIGINI || 'https://conta-ore.github.io').split(',').map(s => s.trim());
-  const o = req.headers.get('origin') || '';
+  const ammessi_ = ammessi(env), o = req.headers.get('origin') || '';
   return {
-    'access-control-allow-origin': ammessi.includes(o) ? o : ammessi[0],
+    'access-control-allow-origin': ammessi_.includes(o) ? o : ammessi_[0],
     'access-control-allow-methods': 'POST, OPTIONS',
     'access-control-allow-headers': 'content-type',
     'access-control-max-age': '86400',
@@ -24,6 +25,16 @@ const unisci = (vecchia, nuovi) => {
   nuovi.forEach(c => m.set(c.split('=')[0], c));
   return [...m.values()].join('; ');
 };
+
+// Tentativi falliti, per codice e per indirizzo: tenuti nella memoria del ponte, che Cloudflare può azzerare quando vuole.
+const QUARTO = 15 * 60 * 1000, TENTATIVI = new Map();
+function troppi(chiave, limite) {
+  const ora = Date.now(), t = (TENTATIVI.get(chiave) || []).filter(x => ora - x < QUARTO);
+  TENTATIVI.set(chiave, t);
+  if (TENTATIVI.size > 5000) for (const [k, v] of TENTATIVI) if (!v.some(x => ora - x < QUARTO)) TENTATIVI.delete(k);
+  return t.length >= limite;
+}
+const conta = chiave => { const t = TENTATIVI.get(chiave) || []; t.push(Date.now()); TENTATIVI.set(chiave, t); };
 
 async function accedi(P, codice, password) {
   const g = await fetch(P + '/login', { headers: UA });
@@ -60,8 +71,9 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors(req, env) });
     const url = new URL(req.url);
     if (req.method !== 'POST' || url.pathname !== '/turni') return json({ ok: false, motivo: 'solo POST /turni' }, req, env, 404);
-    if (!env.PORTALE) return json({ ok: false, motivo: 'ponte non configurato' }, req, env, 500);
-    const P = String(env.PORTALE).replace(/\/+$/, '');
+    if (!ammessi(env).includes(req.headers.get('origin') || '')) return json({ ok: false, motivo: 'sito non ammesso' }, req, env, 403);
+    const P = String(env.PORTALE || PORTALE_PREDEFINITO).replace(/\/+$/, '');
+    if (!P) return json({ ok: false, motivo: 'ponte non configurato' }, req, env, 500);
     let d;
     try { d = await req.json(); } catch (e) { return json({ ok: false, motivo: 'richiesta non valida' }, req, env, 400); }
     const codice = String(d.codice || '').slice(0, 40), password = String(d.password || '').slice(0, 200);
@@ -70,8 +82,11 @@ export default {
       let t = sessione ? await turni(P, sessione) : { ok: false, scaduta: true };
       if (!t.ok && t.scaduta) {
         if (!codice || !password) return json({ ok: false, motivo: 'accesso' }, req, env);
+        const ip = 'ip:' + (req.headers.get('cf-connecting-ip') || '?'), cod = 'codice:' + codice.toUpperCase();
+        if (troppi(cod, 5) || troppi(ip, 20)) return json({ ok: false, motivo: 'troppi tentativi' }, req, env, 429);
+        conta(ip);
         const a = await accedi(P, codice, password);
-        if (!a.ok) return json({ ok: false, motivo: a.motivo }, req, env);
+        if (!a.ok) { if (a.motivo === 'credenziali') conta(cod); return json({ ok: false, motivo: a.motivo }, req, env); }
         sessione = a.sessione; nuovoAccesso = true;
         t = await turni(P, sessione);
         if (!t.ok) return json({ ok: false, motivo: t.scaduta ? 'accesso non riuscito' : 'portale non disponibile (' + t.stato + ')' }, req, env);
