@@ -35,6 +35,7 @@ function troppi(chiave, limite) {
   return t.length >= limite;
 }
 const conta = chiave => { const t = TENTATIVI.get(chiave) || []; t.push(Date.now()); TENTATIVI.set(chiave, t); };
+const sconta = chiave => { const t = TENTATIVI.get(chiave); if (t && t.length) t.pop(); };
 
 async function accedi(P, codice, password) {
   const g = await fetch(P + '/login', { headers: UA });
@@ -84,9 +85,10 @@ export default {
         if (!codice || !password) return json({ ok: false, motivo: 'accesso' }, req, env);
         const ip = 'ip:' + (req.headers.get('cf-connecting-ip') || '?'), cod = 'codice:' + codice.toUpperCase();
         if (troppi(cod, 5) || troppi(ip, 20)) return json({ ok: false, motivo: 'troppi tentativi' }, req, env, 429);
-        conta(ip);
+        conta(ip); conta(cod);                     // si conta prima: richieste in parallelo non scavalcano il limite
         const a = await accedi(P, codice, password);
-        if (!a.ok) { if (a.motivo === 'credenziali') conta(cod); return json({ ok: false, motivo: a.motivo }, req, env); }
+        if (!a.ok) { if (a.motivo !== 'credenziali') sconta(cod); return json({ ok: false, motivo: a.motivo }, req, env); }
+        TENTATIVI.delete(cod);
         sessione = a.sessione; nuovoAccesso = true;
         t = await turni(P, sessione);
         if (!t.ok) return json({ ok: false, motivo: t.scaduta ? 'accesso non riuscito' : 'portale non disponibile (' + t.stato + ')' }, req, env);
