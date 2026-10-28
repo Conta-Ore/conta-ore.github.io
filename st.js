@@ -1,7 +1,7 @@
 /* Conta Ore · Salva turni */
 (async function () {
   'use strict';
-  var VERSIONE = '2026.10.28-2';
+  var VERSIONE = '2026.10.28-3';
   var SCRIPT = document.currentScript && document.currentScript.src ? new URL(document.currentScript.src) : null;
   var SITO = SCRIPT ? SCRIPT.origin + SCRIPT.pathname.replace(/[^/]*$/, '') : null;
   var LIB = SITO ? SITO + 'lib/html-to-image.js' : 'https://cdn.jsdelivr.net/npm/html-to-image@1.11.13/dist/html-to-image.js';
@@ -179,7 +179,8 @@
 
     var nome = 'turni_' + String(dati.alias || 'operatore').replace(/[^\w-]/g, '') + '_' + (dati.thisMonday || 'settimana') + '_salvati_' + iso.slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
     var file = foto ? new File([foto], nome + '.png', { type: 'image/png' }) : new File([testo], nome + '.json', { type: 'application/json' });
-    scarica(file, file.name);
+    var iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!iOS) scarica(file, file.name);
 
     var pan = document.createElement('div');
     pan.setAttribute('data-salva-turni-pannello', '1');
@@ -189,7 +190,7 @@
       '<div style="font-weight:700;font-size:18px">✓ Turni salvati</div>' +
       '<div>' + esc(quando) + ' · ' + esc(dati.turni.length) + ' giorni</div>' +
       (foto ? '<img alt="" style="display:block;margin:10px auto 0;max-width:100%;max-height:40vh;border:1px solid #ccc;border-radius:8px">' : '') +
-      '<button data-a="invia" style="' + btn + 'border:0;background:#111;color:#fff">Invia su WhatsApp o email</button>' +
+      '<button data-a="invia" style="' + btn + 'border:0;background:#111;color:#fff">Salva o invia</button>' +
       '<button data-a="chiudi" style="' + btn + 'border:0;background:#f4f4f5;color:#111">Chiudi</button></div>';
     document.documentElement.appendChild(pan);
     if (foto) pan.querySelector('img').src = URL.createObjectURL(foto);
@@ -200,6 +201,7 @@
       try {
         if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text: riassunto }); return; }
       } catch (err) { if (err && err.name === 'AbortError') return; }
+      scarica(file, file.name);
       window.open('https://wa.me/?text=' + encodeURIComponent(riassunto), '_blank');
     });
   } catch (err) {
