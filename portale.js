@@ -37,7 +37,7 @@
     '<div class="po-stato" id="po-stato"></div><div id="po-lista"></div>' +
     '<div class="btnrow"><button type="button" class="btn primary" id="po-invia">Invia la copia</button><button type="button" class="btn" id="po-aggiorna">Aggiorna</button></div>' +
     '<div class="hint" id="po-copie"></div>' +
-    '<div class="btnrow"><button type="button" class="btn" id="po-archivio">Esporta l’archivio</button><button type="button" class="btn" id="po-esci">Scollega</button></div></div>' +
+    '<div class="btnrow"><button type="button" class="btn" id="po-archivio">Esporta in PDF</button><button type="button" class="btn" id="po-esci">Scollega</button></div></div>' +
     '</div>';
   var pp = $('p-p'); pp.insertBefore(card, pp.firstElementChild);
 
@@ -162,7 +162,9 @@
     var hm = due(r.quando.getHours()) + ':' + due(r.quando.getMinutes());
     var t = r.cambiati ? 'Turni cambiati: copia salvata alle ' + hm : r.salvata ? 'Copia salvata alle ' + hm : 'Aggiornato alle ' + hm + ' · nessun cambio';
     if (e && e.scritti) t += ' · registro: ' + e.scritti + (e.scritti === 1 ? ' giorno segnato' : ' giorni segnati');
+    if (r.ricevute) t += ' · ' + (r.ricevute === 1 ? '1 copia arrivata' : r.ricevute + ' copie arrivate') + ' dal guardiano';
     stato(t + ' ✓');
+    if (r.altre) aggiorna();                       // ne restano altre nella cassetta: un altro giro le porta giù
   }
 
   $('po-entra').onclick = function () {
@@ -173,7 +175,7 @@
     aggiorna();
   };
   $('po-aggiorna').onclick = aggiorna;
-  $('po-archivio').onclick = function () { CO.esportaArchivio(); };
+  $('po-archivio').onclick = async function () { if (!(await CO.esportaPDF())) stato('Nessuna copia da esportare.', true); };
   $('po-esci').onclick = function () {
     if (confirm('Togliere codice e password da questo telefono? Le copie e il registro restano.')) { CO.esci(); vista('accesso'); }
   };

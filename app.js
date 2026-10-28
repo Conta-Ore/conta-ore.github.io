@@ -52,8 +52,10 @@
       stato(CO.spiega(r.motivo), true); return;
     }
     var hm = due(r.quando.getHours()) + ':' + due(r.quando.getMinutes());
-    stato(r.cambiati ? 'Turni cambiati: copia salvata alle ' + hm + ' ✓' : r.salvata ? 'Copia salvata alle ' + hm + ' ✓' : 'Aggiornato alle ' + hm + ' · nessun cambio');
+    stato((r.cambiati ? 'Turni cambiati: copia salvata alle ' + hm : r.salvata ? 'Copia salvata alle ' + hm : 'Aggiornato alle ' + hm + ' · nessun cambio') +
+      (r.ricevute ? ' · ' + (r.ricevute === 1 ? '1 copia arrivata' : r.ricevute + ' copie arrivate') + ' dal guardiano' : '') + ' ✓');
     await disegna();
+    if (r.altre) aggiorna();
   }
 
   $('entra').onclick = function () {
@@ -64,7 +66,7 @@
     aggiorna();
   };
   $('esci').onclick = function () { if (confirm('Togliere codice e password da questo telefono? Le copie salvate restano.')) { CO.esci(); mostra('accesso'); } };
-  $('archivio').onclick = function () { CO.esportaArchivio(); };
+  $('archivio').onclick = async function () { if (!(await CO.esportaPDF())) stato('Nessuna copia da esportare.', true); };
 
   var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   var iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
