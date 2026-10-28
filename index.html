@@ -314,7 +314,8 @@ details summary{cursor:pointer;font-weight:600}
         });
       });
       var p = document.createElement('p'); p.className = 'hint';
-      p.textContent = copie.length + ' copie salvate, dal ' + quando(copie[0].salvato_il) + ' al ' + quando(copie[copie.length - 1].salvato_il) + '.';
+      p.textContent = copie.length === 1 ? 'Una copia salvata, il ' + quando(copie[0].salvato_il) + '.' :
+        copie.length + ' copie salvate, dal ' + quando(copie[0].salvato_il) + ' al ' + quando(copie[copie.length - 1].salvato_il) + '.';
       box.appendChild(p);
       var tab = document.createElement('table'), testa = document.createElement('tr');
       ['Giorno', 'Orario', 'Servizio', 'Visto la prima volta'].forEach(function (h) { var th = document.createElement('th'); th.textContent = h; testa.appendChild(th); });
