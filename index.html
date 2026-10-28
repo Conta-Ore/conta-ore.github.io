@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Conta Ore · Salva turni</title>
+<meta name="description" content="Copia dei propri turni dal portale aziendale: foto, dati e archivio, sul telefono.">
+<meta name="theme-color" content="#111821">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{--ink:#131a24;--ink-2:#38495f;--muted:#6a7c93;--bg:#eceff5;--card:#fff;--card-2:#f5f7fb;--line:#dbe2ec;--accent:#8a6d1f;--accent-soft:#faf3e0;--good:#1f7a4d;--warn:#b45309;--blu:#1e40af;--blu-soft:#eff6ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e9eef6;--ink-2:#b5c3d6;--muted:#7e91aa;--bg:#0b1016;--card:#161e28;--card-2:#1d2732;--line:#2b3746;--accent:#d9b44a;--accent-soft:#2a2314;--good:#4ade80;--warn:#fbbf24;--blu:#93c5fd;--blu-soft:#172554}}
+:root[data-theme="dark"]{--ink:#e9eef6;--ink-2:#b5c3d6;--muted:#7e91aa;--bg:#0b1016;--card:#161e28;--card-2:#1d2732;--line:#2b3746;--accent:#d9b44a;--accent-soft:#2a2314;--good:#4ade80;--warn:#fbbf24;--blu:#93c5fd;--blu-soft:#172554}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:#111821;color:#fff;padding:14px 16px}
+header a{color:#cbd5e1;font-size:13px;text-decoration:none}
+header h1{margin:4px 0 0;font:700 22px/1.1 system-ui,sans-serif;letter-spacing:.02em}
+main{max-width:720px;margin:0 auto;padding:0 16px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:14px;padding:14px 16px}
+.card h2{margin:0 0 6px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+p{margin:6px 0}
+ol{margin:6px 0;padding-left:20px}
+li{margin:4px 0}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+textarea{width:100%;min-height:74px;border:1px solid var(--line);border-radius:10px;background:var(--card-2);color:var(--ink);padding:8px;font:12px/1.35 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);color:var(--ink);font:600 14px system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.row>.btn{flex:1 1 180px}
+.hint{font-size:13px;color:var(--muted)}
+.ok{color:var(--good)}.no{color:var(--warn)}
+.tabs{display:flex;gap:6px;margin-top:8px}
+.tabs button{flex:1;min-height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card-2);color:var(--ink);font:600 13px system-ui,sans-serif}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+td,th{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top;text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:600}
+td.n{font-family:ui-monospace,Menlo,Consolas,monospace;white-space:nowrap}
+.cambio{background:var(--accent-soft)}
+.badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--blu-soft);color:var(--blu)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted);cursor:pointer}
+.msg{margin-top:8px;font-size:13.5px}
+details summary{cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <h1>Conta Ore</h1>
+  <div style="font-size:13px;color:#cbd5e1;margin-top:2px">Salva turni: la copia dei tuoi turni, sul tuo telefono</div>
+</header>
+<main>
+
+<div class="card" id="arrivo" hidden>
+  <h2>Copia arrivata</h2>
+  <div id="arrivo-msg" class="msg"></div>
+  <div class="row" id="arrivo-scelta" hidden>
+    <button type="button" class="btn primary" id="arrivo-si">Archiviala</button>
+    <button type="button" class="btn" id="arrivo-no">Non è mia, scarta</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>A cosa serve</h2>
+  <p>Se i turni stanno solo su un portale, con gli orari nascosti dietro un tasto, di quello che ti hanno fatto fare non ti resta niente in mano. Con un tocco, sulla pagina dei turni, il pulsante <b>Salva turni</b> fa questo:</p>
+  <ol>
+    <li>scrive l'orario accanto a ogni turno, direttamente sulla pagina del portale;</li>
+    <li>ne fa una foto con la data e l'ora del salvataggio, e dentro la foto mette anche i dati;</li>
+    <li>salva i dati della settimana insieme alla pagina originale e alla sua impronta (SHA-256);</li>
+    <li>te li fa mandare a te stesso su WhatsApp o per email, così la data dell'invio la mette un altro;</li>
+    <li>li archivia qui, versione per versione: se cambiano un turno, lo vedi e sai quando l'hai saputo.</li>
+  </ol>
+  <p class="hint">Il pulsante non legge la password e non manda niente a nessuno: tutto resta sul tuo telefono finché non decidi tu di inviarlo.</p>
+</div>
+
+<div class="card">
+  <h2>1 · Installa il pulsante (una volta sola)</h2>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-os="and">Android (Chrome)</button>
+    <button type="button" role="tab" aria-selected="false" data-os="ios">iPhone (Safari)</button>
+    <button type="button" role="tab" aria-selected="false" data-os="pc">Computer</button>
+  </div>
+  <div data-pane="and">
+    <ol>
+      <li>Tocca <b>Copia il pulsante</b> qui sotto.</li>
+      <li>In Chrome tocca la stella ☆ nel menu ⋮ per salvare questa pagina nei preferiti, poi tocca <b>Modifica</b>.</li>
+      <li>Come nome scrivi <b>Salva turni</b>; nel campo dell'indirizzo cancella tutto e incolla.</li>
+      <li>Da quel momento: apri il portale, entra, vai sulla pagina dei turni, tocca la barra degli indirizzi, scrivi <b>Salva turni</b> e tocca il preferito con la stellina che compare nell'elenco.</li>
+    </ol>
+  </div>
+  <div data-pane="ios" hidden>
+    <ol>
+      <li>Tocca <b>Copia il pulsante</b> qui sotto.</li>
+      <li>In Safari tocca il quadrato con la freccia ↑ e scegli <b>Aggiungi segnalibro</b>; salvalo.</li>
+      <li>Apri i segnalibri 📖, tocca <b>Modifica</b>, apri quello nuovo: come nome <b>Salva turni</b>, come indirizzo cancella tutto e incolla.</li>
+      <li>Da quel momento: apri il portale, entra, vai sulla pagina dei turni, apri i segnalibri e tocca <b>Salva turni</b>.</li>
+    </ol>
+  </div>
+  <div data-pane="pc" hidden>
+    <ol>
+      <li>Trascina questo pulsante nella barra dei preferiti: <a class="btn" id="bm-link" href="#">⭐ Salva turni</a></li>
+      <li>Sulla pagina dei turni, dopo l'accesso, cliccalo.</li>
+    </ol>
+  </div>
+  <textarea id="bm-codice" readonly aria-label="Codice del pulsante"></textarea>
+  <div class="row"><button type="button" class="btn primary" id="bm-copia">Copia il pulsante</button></div>
+  <div id="bm-msg" class="msg hint"></div>
+  <details style="margin-top:8px"><summary>Per la prova più forte: il video</summary>
+    <p class="hint">Nel riquadro che compare dopo il salvataggio c'è «Apri gli orari uno per uno»: avvia prima la registrazione dello schermo del telefono, poi toccalo. Il video riprende sul sito del portale, uno dopo l'altro, gli orari veri nella schermata che mostra il portale stesso.</p>
+  </details>
+</div>
+
+<div class="card">
+  <h2>2 · Il tuo archivio</h2>
+  <p class="hint">Le copie mandate dal pulsante arrivano qui da sole. Puoi anche caricare a mano le foto o i file salvati.</p>
+  <div class="drop" id="drop" tabindex="0" role="button">Carica foto (.png) o dati (.json) del pulsante<input type="file" id="file" accept=".json,.png,application/json,image/png" multiple hidden></div>
+  <div id="arch-msg" class="msg"></div>
+  <div id="arch"></div>
+  <div class="row">
+    <button type="button" class="btn" id="esporta">Scarica tutto l'archivio</button>
+  </div>
+  <p class="hint">L'archivio sta solo in questo browser: ogni tanto scaricalo e tienine una copia (Drive, email a te stesso).</p>
+</div>
+
+<div class="card">
+  <h2>3 · Turni per email: salvataggio automatico</h2>
+  <p>Se i turni ti arrivano anche per email su Gmail, puoi fare in modo che ogni email coi turni venga salvata da sola su Google Drive: l'allegato e l'email intera (file <code>.eml</code>). L'email intera porta la firma digitale del server che l'ha spedita (DKIM): dimostra da dove arriva e che non è stata toccata.</p>
+  <p class="hint">Gira nel tuo account Google, ogni 15 minuti, anche col telefono spento. Nessuno oltre a te vede niente, nemmeno questo sito.</p>
+  <ol>
+    <li>Da computer apri <a href="https://script.google.com/home/start" target="_blank" rel="noopener">script.google.com</a> con il tuo account Gmail e crea un <b>Nuovo progetto</b>.</li>
+    <li>Cancella quello che c'è, incolla il codice qui sotto e salva (💾). Se le tue email dei turni hanno un oggetto diverso, cambia la riga <code>CERCA</code>.</li>
+    <li>In alto scegli la funzione <b>installa</b> e premi <b>Esegui</b>. Google ti chiede il permesso di leggere Gmail e scrivere su Drive: è il tuo script, nel tuo account. Concedilo.</li>
+    <li>Fatto. In Drive trovi la cartella <b>Turni salvati</b>, e in Gmail le email già salvate prendono l'etichetta <b>Turni salvati</b>.</li>
+  </ol>
+  <textarea id="gs-codice" readonly aria-label="Codice per Google Apps Script" style="min-height:140px"></textarea>
+  <div class="row"><button type="button" class="btn primary" id="gs-copia">Copia il codice</button></div>
+  <div id="gs-msg" class="msg hint"></div>
+</div>
+
+<div class="card">
+  <h2>Perché tenerli</h2>
+  <p>Il decreto sugli istituti di vigilanza (DM 269/2010, allegato D, punto 1.a) obbliga l'istituto a comunicare i turni alle guardie e a tenerli a disposizione dell'Autorità di pubblica sicurezza per due anni. Una tua copia, con la data messa da un altro (l'invio su WhatsApp o l'email), ti serve se un giorno i conti non tornano: per le ore, i riposi, il preavviso dei cambi. Per i tuoi dati personali puoi anche chiederne copia per iscritto (GDPR, art. 15).</p>
+  <p class="hint">Salva turni non è un servizio legale: per una vertenza porta questi file al sindacato o a un avvocato del lavoro.</p>
+</div>
+
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var SITO = location.origin + location.pathname.replace(/[^/]*$/, '');
+
+  /* ---------- 1. il pulsante (bookmarklet) ---------- */
+  var BM = "javascript:(function(){var s=document.createElement('script');s.src='" + SITO + "st.js?v='+Date.now();s.onerror=function(){alert('Salva turni: non riesco a caricare il pulsante, controlla la connessione.')};document.body.appendChild(s)})()";
+  $('bm-codice').value = BM;
+  $('bm-link').setAttribute('href', BM);
+  $('bm-link').addEventListener('click', function (e) { e.preventDefault(); $('bm-msg').textContent = 'Non cliccarlo qui: trascinalo nella barra dei preferiti.'; });
+  function copia(testo, dove) {
+    var fatto = function () { $(dove).textContent = 'Copiato.'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(testo).then(fatto, function () { manuale(); });
+    else manuale();
+    function manuale() { var t = document.createElement('textarea'); t.value = testo; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); fatto(); } catch (e) { $(dove).textContent = 'Copia a mano il testo qui sopra.'; } t.remove(); }
+  }
+  $('bm-copia').onclick = function () { copia(BM, 'bm-msg'); };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-os]'), function (b) {
+    b.onclick = function () {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-os]'), function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-os'); });
+    };
+  });
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) document.querySelector('[data-os="ios"]').click();
+  else if (!/Android/.test(navigator.userAgent)) document.querySelector('[data-os="pc"]').click();
+
+  /* ---------- 3. lo script per Gmail ---------- */
+  $('gs-codice').value = [
+    "// Turni salvati - Salva turni. Salva su Drive gli allegati e l'email intera (.eml) delle email coi turni.",
+    "// Gira nel tuo account Google ogni 15 minuti. Per fermarlo: menu Trigger (sveglia) e cancella il trigger.",
+    "const CERCA = 'subject:turni has:attachment';   // quali email salvare: cambia qui se il tuo oggetto e' diverso",
+    "const NOME = 'Turni salvati';                    // nome della cartella su Drive e dell'etichetta in Gmail",
+    "",
+    "function salvaTurni() {",
+    "  const etichetta = GmailApp.getUserLabelByName(NOME) || GmailApp.createLabel(NOME);",
+    "  const cartelle = DriveApp.getFoldersByName(NOME);",
+    "  const cartella = cartelle.hasNext() ? cartelle.next() : DriveApp.createFolder(NOME);",
+    "  const conversazioni = GmailApp.search(CERCA + ' -label:\"' + NOME + '\"', 0, 50);",
+    "  conversazioni.forEach(function (c) {",
+    "    c.getMessages().forEach(function (m) {",
+    "      const quando = Utilities.formatDate(m.getDate(), 'Europe/Rome', 'yyyy-MM-dd_HHmmss');",
+    "      m.getAttachments({includeInlineImages: false}).forEach(function (a) {",
+    "        cartella.createFile(a.copyBlob()).setName(quando + '_' + a.getName());",
+    "      });",
+    "      cartella.createFile(Utilities.newBlob(m.getRawContent(), 'message/rfc822', quando + '_email.eml'));",
+    "    });",
+    "    c.addLabel(etichetta);",
+    "  });",
+    "}",
+    "",
+    "function installa() {",
+    "  ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });",
+    "  ScriptApp.newTrigger('salvaTurni').timeBased().everyMinutes(15).create();",
+    "  salvaTurni();",
+    "}"
+  ].join('\n');
+  $('gs-copia').onclick = function () { copia($('gs-codice').value, 'gs-msg'); };
+
+  /* ---------- 2. l'archivio (IndexedDB, solo su questo telefono) ---------- */
+  var DB = null;
+  function apriDB() {
+    return new Promise(function (ok, ko) {
+      if (DB) return ok(DB);
+      var r = indexedDB.open('salva-turni', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('copie', { keyPath: 'chiave' }); };
+      r.onsuccess = function () { DB = r.result; ok(DB); };
+      r.onerror = function () { ko(r.error); };
+    });
+  }
+  function tutte() {
+    return apriDB().then(function (db) { return new Promise(function (ok, ko) {
+      var r = db.transaction('copie').objectStore('copie').getAll(); r.onsuccess = function () { ok(r.result || []); }; r.onerror = function () { ko(r.error); };
+    }); });
+  }
+  // una copia gia' in archivio non si sovrascrive mai: add() rifiuta la stessa chiave
+  function metti(c) {
+    return apriDB().then(function (db) { return new Promise(function (ok) {
+      var tx = db.transaction('copie', 'readwrite'), doppia = false;
+      var r = tx.objectStore('copie').add(c);
+      r.onerror = function (e) { if (r.error && r.error.name === 'ConstraintError') { doppia = true; e.preventDefault(); } };
+      tx.oncomplete = function () { ok(doppia ? 'doppia' : 'nuova'); };
+      tx.onabort = function () { ok(doppia ? 'doppia' : 'errore'); };
+    }); });
+  }
+  var DATA = /^\d{4}-\d{2}-\d{2}$/, ORA = /^\d{1,2}:\d{2}$/;
+  // una copia valida: solo i campi che servono, tipi controllati
+  function pulisci(c, provenienza) {
+    if (!c || typeof c !== 'object' || !Array.isArray(c.turni) || typeof c.salvato_il !== 'string') return null;
+    var turni = c.turni.filter(function (t) { return t && DATA.test(String(t.data)); }).map(function (t) {
+      var ind = t.indirizzoServizio && typeof t.indirizzoServizio === 'object' ? t.indirizzoServizio : {};
+      return { id: String(t.id == null ? '' : t.id).slice(0, 20), data: String(t.data), oraInizio: ORA.test(String(t.oraInizio)) ? String(t.oraInizio) : '',
+        oraFine: ORA.test(String(t.oraFine)) ? String(t.oraFine) : '', tipo: String(t.tipoGiornata || '').slice(0, 20),
+        servizio: String(t.servizio || '').trim().slice(0, 80), dove: [ind.indirizzo, ind.citta].filter(Boolean).join(', ').slice(0, 120),
+        note: String(t.note || '').slice(0, 80), minuti: +t.minutiTurno || 0 };
+    });
+    if (!turni.length) return null;
+    return { chiave: c.salvato_il + '|' + (c.operatore || ''), salvato_il: c.salvato_il.slice(0, 32), operatore: String(c.operatore || '').slice(0, 20),
+      settimana_dal: DATA.test(String(c.settimana_dal)) ? c.settimana_dal : turni[0].data, origine: String(c.origine || '').slice(0, 40),
+      pagina: String(c.pagina || '').slice(0, 200), arrivata_da: String(provenienza || '').slice(0, 200), archiviata_il: new Date().toISOString(),
+      sha_pagina: /^[0-9a-f]{64}$/.test(String(c.sha256_pagina_originale)) ? c.sha256_pagina_originale : null,
+      pagina_originale: typeof c.pagina_originale === 'string' ? c.pagina_originale.slice(0, 400000) : null, turni: turni };
+  }
+  function aggiungi(c, provenienza) {
+    var p = pulisci(c, provenienza);
+    if (!p) return Promise.resolve('non valida');
+    return metti(p).then(function (esito) { mostra(); return esito; });
+  }
+
+  // dentro le foto del pulsante: blocco PNG iTXt «salva-turni»
+  function datiDaPng(buf) {
+    var u = new Uint8Array(buf), dv = new DataView(buf), i = 8;
+    if (u[1] !== 0x50 || u[2] !== 0x4e || u[3] !== 0x47) return null;
+    while (i + 8 <= u.length) {
+      var len = dv.getUint32(i), tipo = String.fromCharCode(u[i + 4], u[i + 5], u[i + 6], u[i + 7]);
+      if (tipo === 'iTXt') {
+        var corpo = u.subarray(i + 8, i + 8 + len), z = corpo.indexOf(0);
+        if (new TextDecoder().decode(corpo.subarray(0, z)) === 'salva-turni') {
+          var j = z + 3; j = corpo.indexOf(0, j) + 1; j = corpo.indexOf(0, j) + 1;
+          try { return JSON.parse(new TextDecoder().decode(corpo.subarray(j))); } catch (e) { return null; }
+        }
+      }
+      if (tipo === 'IEND') break;
+      i += 12 + len;
+    }
+    return null;
+  }
+  function caricaFile(files) {
+    var conto = { nuova: 0, doppia: 0, altro: 0 };
+    var giri = Array.prototype.map.call(files, function (f) {
+      return f.arrayBuffer().then(function (buf) {
+        var c = null;
+        if (/\.png$/i.test(f.name) || f.type === 'image/png') c = datiDaPng(buf);
+        else { try { c = JSON.parse(new TextDecoder().decode(buf)); } catch (e) { c = null; } }
+        return aggiungi(c, 'file ' + f.name).then(function (esito) { conto[esito === 'nuova' || esito === 'doppia' ? esito : 'altro']++; });
+      });
+    });
+    Promise.all(giri).then(function () {
+      $('arch-msg').textContent = 'Copie caricate: ' + conto.nuova + (conto.doppia ? ' · già in archivio: ' + conto.doppia : '') + (conto.altro ? ' · non riconosciute: ' + conto.altro : '') + '.';
+    });
+  }
+  $('drop').onclick = function () { $('file').click(); };
+  $('drop').onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('file').click(); } };
+  $('file').onchange = function (e) { caricaFile(e.target.files); e.target.value = ''; };
+  ['dragenter', 'dragover'].forEach(function (ev) { $('drop').addEventListener(ev, function (e) { e.preventDefault(); }); });
+  $('drop').addEventListener('drop', function (e) { e.preventDefault(); caricaFile(e.dataTransfer.files); });
+
+  var GG = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+  var giorno = function (d) { var x = new Date(d + 'T12:00:00'); return GG[x.getDay()] + ' ' + d.slice(8, 10) + '/' + d.slice(5, 7); };
+  var orario = function (t) { return t.tipo === 'TURNO' ? t.oraInizio + '–' + t.oraFine : (t.tipo || '').toLowerCase(); };
+  var quando = function (iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7) + ' ' + iso.slice(11, 16); };
+  function td(testo, cls) { var c = document.createElement('td'); if (cls) c.className = cls; c.textContent = testo; return c; }
+
+  // ultima versione di ogni giorno, con la storia dei cambi e quando sono stati visti
+  function mostra() {
+    tutte().then(function (copie) {
+      var box = $('arch'); box.textContent = '';
+      if (!copie.length) { box.innerHTML = '<p class="hint">Ancora nessuna copia.</p>'; return; }
+      copie.sort(function (a, b) { return a.salvato_il < b.salvato_il ? -1 : 1; });
+      var storia = {};
+      copie.forEach(function (c) {
+        c.turni.forEach(function (t) {
+          var s = storia[t.data] = storia[t.data] || [];
+          var firma = orario(t) + ' ' + t.servizio;
+          if (!s.length || s[s.length - 1].firma !== firma) s.push({ firma: firma, t: t, visto: c.salvato_il });
+        });
+      });
+      var p = document.createElement('p'); p.className = 'hint';
+      p.textContent = copie.length + ' copie salvate, dal ' + quando(copie[0].salvato_il) + ' al ' + quando(copie[copie.length - 1].salvato_il) + '.';
+      box.appendChild(p);
+      var tab = document.createElement('table'), testa = document.createElement('tr');
+      ['Giorno', 'Orario', 'Servizio', 'Visto la prima volta'].forEach(function (h) { var th = document.createElement('th'); th.textContent = h; testa.appendChild(th); });
+      tab.appendChild(testa);
+      Object.keys(storia).sort().reverse().forEach(function (d) {
+        var s = storia[d], ult = s[s.length - 1];
+        var tr = document.createElement('tr'); if (s.length > 1) tr.className = 'cambio';
+        tr.appendChild(td(giorno(d)));
+        var o = td(orario(ult.t), 'n');
+        if (ult.t.minuti) o.appendChild(document.createTextNode(' · ' + String(ult.t.minuti / 60).replace('.', ',') + ' h'));
+        tr.appendChild(o);
+        var sv = td(ult.t.servizio || '');
+        if (s.length > 1) {
+          var b = document.createElement('div'); b.className = 'hint';
+          b.textContent = 'cambiato: ' + s.slice(0, -1).map(function (x) { return x.firma.trim() + ' (visto ' + quando(x.visto) + ')'; }).join(' → ');
+          sv.appendChild(b);
+        }
+        tr.appendChild(sv);
+        tr.appendChild(td(quando(ult.visto), 'n'));
+        tab.appendChild(tr);
+      });
+      box.appendChild(tab);
+    }).catch(function (e) { $('arch').textContent = 'Archivio non disponibile in questo browser (' + e + ').'; });
+  }
+
+  $('esporta').onclick = function () {
+    tutte().then(function (copie) {
+      var blob = new Blob([JSON.stringify({ programma: 'Salva turni', esportato_il: new Date().toISOString(), copie: copie }, null, 1)], { type: 'application/json' });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'archivio-turni-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); }, 3000);
+    });
+  };
+
+  /* ---------- copie in arrivo dal pulsante ----------
+     Arrivano solo dalla finestra che ha aperto questa pagina. Il sito del portale non e' scritto nel codice (ogni
+     istituto ha il suo), quindi la pagina mostra da dove arriva la copia e la archivia solo dopo la conferma. */
+  var inArrivo = null;
+  window.addEventListener('message', function (ev) {
+    if (inArrivo || !window.opener || ev.source !== window.opener || !ev.data || ev.data.tipo !== 'salva-turni') return;
+    var p = pulisci(ev.data.copia, ev.origin);
+    $('arrivo').hidden = false;
+    if (!p) { $('arrivo-msg').className = 'msg no'; $('arrivo-msg').textContent = 'È arrivato qualcosa che non è una copia di Salva turni: scartato.'; return; }
+    inArrivo = { copia: ev.data.copia, origine: ev.origin };
+    $('arrivo-msg').className = 'msg';
+    $('arrivo-msg').textContent = 'Arriva da ' + ev.origin + ': operatore ' + (p.operatore || '?') + ', settimana dal ' +
+      p.settimana_dal.split('-').reverse().join('/') + ', ' + p.turni.length + ' giorni, salvata il ' + quando(p.salvato_il) + '. È la tua?';
+    $('arrivo-scelta').hidden = false;
+  });
+  $('arrivo-si').onclick = function () {
+    if (!inArrivo) return;
+    $('arrivo-scelta').hidden = true;
+    aggiungi(inArrivo.copia, inArrivo.origine).then(function (esito) {
+      $('arrivo-msg').className = esito === 'nuova' ? 'msg ok' : 'msg no';
+      $('arrivo-msg').textContent = esito === 'nuova' ? 'Archiviata. Puoi tornare al portale.' : esito === 'doppia' ? 'Questa copia era già in archivio: non l’ho toccata.' : 'Non sono riuscito ad archiviarla.';
+    });
+  };
+  $('arrivo-no').onclick = function () { inArrivo = null; $('arrivo-scelta').hidden = true; $('arrivo-msg').textContent = 'Scartata.'; };
+  if (window.opener && location.hash === '#da-portale') {
+    // il messaggio non contiene dati: dice solo che la pagina e' pronta a ricevere
+    try { window.opener.postMessage({ tipo: 'archivio-pronto' }, '*'); } catch (e) { /* finestra chiusa */ }
+  }
+  mostra();
+})();
+</script>
+</body>
+</html>
