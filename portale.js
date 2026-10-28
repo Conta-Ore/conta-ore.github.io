@@ -20,14 +20,16 @@
     '.po-sett{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:12px 0 2px}' +
     '#po-tab td{text-align:right;font-family:"IBM Plex Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}' +
     '#po-tab td:first-child{text-align:left;font-family:inherit}#po-tab td.diff{color:var(--warn);font-weight:600}' +
-    '.po-var{font-size:12.5px;padding:6px 0;border-top:1px solid var(--line-2)}.po-var:first-child{border-top:0}';
+    '.po-var{font-size:12.5px;padding:6px 0;border-top:1px solid var(--line-2)}.po-var:first-child{border-top:0}' +
+    '.po-mese{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line-2);font-size:13.5px}' +
+    '.po-mese .btn{flex:0 0 auto;width:auto;margin:0;padding:8px 12px;font-size:13px}.po-mese .q{display:block;font-size:12px;color:var(--muted)}';
   document.head.appendChild(st);
 
   /* riquadro dei turni, in cima alla scheda Turni */
   var card = el('div', 'card'); card.id = 'po-card';
   card.innerHTML = '<h3>Turni dal portale</h3><div class="b">' +
     '<div id="po-accesso" hidden>' +
-    '<p class="hint" style="margin:0 0 10px;font-size:12.5px">Il Ruolino entra nel portale dei turni con il tuo codice, segna i turni nel registro e tiene una copia di ogni versione, con data, ora e impronta.</p>' +
+    '<p class="hint" style="margin:0 0 10px;font-size:12.5px">Colleghi una volta sola. Da lì il Ruolino entra nel portale con il tuo codice, segna i turni nel registro con il posto di servizio, tiene una copia di ogni versione con data, ora e impronta, e a mese finito prepara il PDF del mese.</p>' +
     '<div class="g2"><div class="f"><label for="po-codice">Codice operatore</label><input type="text" id="po-codice" autocomplete="username" autocapitalize="characters"></div>' +
     '<div class="f"><label for="po-password">Password</label><input type="password" id="po-password" autocomplete="current-password"></div></div>' +
     '<div class="btnrow"><button type="button" class="btn primary" id="po-entra">Collega il portale</button></div>' +
@@ -43,7 +45,7 @@
 
   /* riquadro del riscontro, dopo il riepilogo del mese */
   var rc = el('div', 'card'); rc.id = 'po-riscontro';
-  rc.innerHTML = '<h3>Riscontro delle ore</h3><div class="b"><table id="po-tab"></table><div class="hint" id="po-nota"></div><div id="po-var"></div></div>';
+  rc.innerHTML = '<h3>Riscontro delle ore</h3><div class="b"><table id="po-tab"></table><div class="hint" id="po-nota"></div><div id="po-var"></div><div id="po-mesi"></div></div>';
   var riep = Array.prototype.filter.call(pp.querySelectorAll('h3'), function (h) { return h.textContent.trim() === 'Riepilogo del mese'; })[0];
   var dopo = riep ? riep.closest('.card') : null;
   if (dopo && dopo.nextSibling) pp.insertBefore(rc, dopo.nextSibling); else pp.appendChild(rc);
@@ -148,6 +150,144 @@
     return e;
   }
 
+  /* ---- chiusura del mese: a mese finito il Ruolino prepara da solo il PDF (riepilogo, giorno per giorno, versioni dal portale) ---- */
+  var KEY_CHIUSURE = 'gpg_chiusure', KEY_COLLEGATO = 'co_collegato';
+  var nomeMese = function (ym) { return MESI[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4); };
+  var ymOggi = function () { return CO.isoLocale(new Date()).slice(0, 7); };
+  var iOS = function () { return typeof IOS !== 'undefined' ? !!IOS : /iPhone|iPad|iPod/.test(navigator.userAgent); };
+  var haDati = function (r) { return !!(r && (r.t && r.t.length || r.s || r.o > 0)); };
+  function leggiChiusure() { try { return JSON.parse(localStorage.getItem(KEY_CHIUSURE)) || {}; } catch (e) { return {}; } }
+  function salvaChiusure(c) { try { localStorage.setItem(KEY_CHIUSURE, JSON.stringify(c)); } catch (e) { /* pieno */ } }
+  function giorniDelMese(ym) { var reg = R.reg(); return Object.keys(reg).filter(function (d) { return d.slice(0, 7) === ym && haDati(reg[d]); }).sort(); }
+  // un'impronta del registro del mese: se cambia dopo la chiusura, il mese si richiude
+  function improntaMese(ym) {
+    var reg = R.reg(), s = JSON.stringify(giorniDelMese(ym).map(function (d) { var r = reg[d]; return [d, r.t, r.s || '', r.o || 0, !!r.n, r.ob || '', r.src || '']; }));
+    var h = 5381; for (var i = 0; i < s.length; i++) h = ((h * 33) ^ s.charCodeAt(i)) >>> 0;
+    return h.toString(16) + ':' + s.length;
+  }
+  // si chiudono solo i mesi finiti dal collegamento in poi: i mesi vecchi del registro restano come sono
+  function mesiDaChiudere() {
+    var da = localStorage.getItem(KEY_COLLEGATO) || '', oggi = ymOggi(), C = leggiChiusure(), reg = R.reg(), mesi = {};
+    if (!/^\d{4}-\d{2}$/.test(da)) return [];
+    Object.keys(reg).forEach(function (d) { var ym = d.slice(0, 7); if (ym >= da && ym < oggi && haDati(reg[d])) mesi[ym] = 1; });
+    return Object.keys(mesi).filter(function (ym) { return !C[ym] || C[ym].impronta !== improntaMese(ym); }).sort();
+  }
+  function disegnaMese(ym, c) {
+    var reg = R.reg(), nGiorni = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+    var W = 1080, rh = 38, top = 400, H = top + nGiorni * rh + 110;
+    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var g = cv.getContext('2d');
+    g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#111821'; g.fillRect(0, 0, W, 150);
+    g.fillStyle = '#ffffff'; g.font = '700 46px system-ui,sans-serif'; g.fillText(nomeMese(ym) + (c.operatore ? ' · ' + c.operatore : ''), 48, 72);
+    g.font = '400 30px system-ui,sans-serif'; g.fillText('Chiuso il ' + CO.oraIt(c.chiuso_il) + ' · Ruolino Paga', 48, 120);
+    g.fillStyle = '#111821'; g.font = '600 34px system-ui,sans-serif';
+    g.fillText(num(c.ore) + ' ore · ' + c.gg + ' giorni · ' + c.notti + ' notti' + (c.fest ? ' · ' + num(c.fest) + ' h festive' : '') + (c.ferie ? ' · ' + c.ferie + ' ferie o permessi' : ''), 48, 215);
+    if (c.netto != null) { g.font = '400 30px system-ui,sans-serif'; g.fillText('Netto stimato dal Ruolino: ' + Math.round(c.netto).toLocaleString('it-IT') + ' €', 48, 262); }
+    g.fillStyle = '#475569'; g.font = '600 24px system-ui,sans-serif';
+    g.fillText('GIORNO', 48, 340); g.fillText('ORARIO', 220, 340); g.fillText('ORE', 560, 340); g.fillText('POSTO', 660, 340); g.fillText('FONTE', 1000, 340);
+    var y = top, FONTE = { portale: 'P', pdf: 'F', man: 'M', rot: 'R' };
+    for (var d = 1; d <= nGiorni; d++) {
+      var s = ym + '-' + due(d), r = reg[s], con = haDati(r);
+      if (d % 2 === 0) { g.fillStyle = '#f3f5f9'; g.fillRect(0, y - 27, W, rh); }
+      g.fillStyle = con ? '#111821' : '#94a3b8'; g.font = '500 26px system-ui,sans-serif';
+      g.fillText(CO.giorno(s).split(' ').slice(0, 2).join(' '), 48, y);
+      var orario = !con ? '—' : r.t && r.t.length ? r.t.map(function (t) { return t.i + '–' + (t.f || '…'); }).join(' + ') + (r.o > 0 ? ' + ' + num(r.o) + ' h' : '') : r.s ? r.s : num(r.o) + ' h';
+      g.font = '600 26px ui-monospace,Menlo,Consolas,monospace'; g.fillText(orario.slice(0, 24), 220, y);
+      g.font = '500 26px system-ui,sans-serif'; g.fillText(con && (r.t && r.t.length || r.o > 0) ? num(R.oreGiorno(r)) : '', 560, y);
+      g.fillStyle = '#475569'; g.font = '400 24px system-ui,sans-serif'; g.fillText(con ? String(r.ob || '').slice(0, 26) : '', 660, y);
+      g.fillText(con ? (FONTE[r.src] || 'M') : '', 1000, y);
+      y += rh;
+    }
+    g.fillStyle = '#475569'; g.font = '400 22px system-ui,sans-serif';
+    g.fillText('Fonte: P portale dei turni · F foglio di servizio · M segnato a mano · R rotazione.' + (c.versioni ? ' Seguono ' + c.versioni + (c.versioni === 1 ? ' versione' : ' versioni') + ' dei turni dal portale.' : ''), 48, H - 40);
+    return cv;
+  }
+  // le versioni dei turni dal portale che toccano il mese, senza ripetere quelle uguali alla precedente
+  function copieDelMese(ym, tutte) {
+    var out = [], prima = null;
+    CO.leggibili(tutte).forEach(function (c) {
+      if (!c.dati.turni.some(function (t) { return String(t.data).slice(0, 7) === ym; })) return;
+      var f = JSON.stringify(c.dati.turni); if (f === prima) return; prima = f; out.push(c);
+    });
+    return out;
+  }
+  async function pdfMese(ym) {
+    var C = leggiChiusure(), c = C[ym]; if (!c) return null;
+    var versioni = copieDelMese(ym, await CO.copie());
+    c.versioni = versioni.length;
+    var pagine = [await CO.jpeg(disegnaMese(ym, c))];
+    for (var i = 0; i < versioni.length; i++) pagine.push(await CO.jpeg(CO.disegnaCopia(versioni[i])));
+    return new File([CO.pdfDaImmagini(pagine)], 'ruolino_' + String(c.operatore || 'turni').replace(/[^\w-]/g, '') + '_' + ym + '.pdf', { type: 'application/pdf' });
+  }
+  function chiudiMese(ym) {
+    var riep = R.riepilogo(ym), C = leggiChiusure(), vecchia = C[ym], netto = null;
+    try { netto = R.nettoDaRegistro(ym); if (!isFinite(netto)) netto = null; } catch (e) { netto = null; }
+    C[ym] = { chiuso_il: CO.isoLocale(new Date()), impronta: improntaMese(ym), ore: riep.ore, gg: riep.gg, notti: riep.notti, fest: riep.fest, ferie: riep.ferie, netto: netto,
+      operatore: (CO.credenziali() || {}).codice || '', aggiornata: !!vecchia, inviato_il: null, salvato_il: null };
+    salvaChiusure(C);
+    if (vecchia) togliAvviso('mese-' + ym, true);   // il mese è cambiato: l'avviso vecchio non vale più, e torna anche se era stato rimandato
+    return C[ym];
+  }
+  function togliAvviso(id, ancheRimando) {
+    Array.prototype.forEach.call(document.querySelectorAll('#avvisi [data-id]'), function (x) { if (x.getAttribute('data-id') === id) x.remove(); });
+    if (ancheRimando) { try { var a = JSON.parse(localStorage.getItem('gpg_avvisi')) || {}; delete a[id]; localStorage.setItem('gpg_avvisi', JSON.stringify(a)); } catch (e) { /* niente */ } }
+  }
+  // su Android il PDF finisce fra i download da solo; su iPhone serve il tocco su «Manda a te stesso»
+  async function salvaMeseSulTelefono(ym) {
+    if (iOS() || typeof window.scarica !== 'function') return false;
+    var f = await pdfMese(ym); if (!f) return false;
+    var ok = !!window.scarica(f, f.name);
+    if (ok) { var C = leggiChiusure(); if (C[ym]) { C[ym].salvato_il = CO.isoLocale(new Date()); salvaChiusure(C); } }
+    return ok;
+  }
+  async function mandaMese(ym) {
+    var f = await pdfMese(ym); if (!f) return false;
+    var C = leggiChiusure(), r = null;
+    if (typeof window.condividi === 'function') { try { r = await window.condividi({ title: 'Turni ' + nomeMese(ym), text: 'Turni ' + nomeMese(ym) + ' · ' + num(C[ym].ore) + ' ore', files: [f] }); } catch (e) { r = null; } }
+    if (r === 'abort') return false;
+    if (r === 'share') { C[ym].inviato_il = CO.isoLocale(new Date()); if (typeof window.chiudiAvviso === 'function') window.chiudiAvviso('mese-' + ym); togliAvviso('mese-' + ym); }
+    else { if (typeof window.scarica !== 'function' || !window.scarica(f, f.name)) return false; C[ym].salvato_il = CO.isoLocale(new Date()); }
+    salvaChiusure(C); renderMesi(); return true;
+  }
+  // l'avviso resta finché il PDF non è stato mandato; «Più tardi» lo rimanda di tre giorni
+  function avvisoMese(ym, c) {
+    var id = 'mese-' + ym, nome = nomeMese(ym);
+    if (typeof window.mostraAvviso !== 'function' || c.inviato_il) return;
+    if (typeof window.avvisoChiuso === 'function' && window.avvisoChiuso(id, 3)) return;
+    window.mostraAvviso(id, (c.aggiornata ? 'Il mese di ' + nome + ' è cambiato dopo la chiusura: ' : nome + ' è chiuso: ') + num(c.ore) + ' ore in ' + c.gg + ' giorni. Il PDF del mese' +
+      (c.salvato_il ? ' è fra i download' : ' è pronto') + ': mandalo a te stesso, così resta anche fuori dal telefono.', [
+      { t: 'Manda a te stesso', primo: true, f: function () { mandaMese(ym); } },
+      { t: 'Più tardi', f: function () { if (typeof window.chiudiAvviso === 'function') window.chiudiAvviso(id); } }
+    ]);
+  }
+  function renderMesi() {
+    var box = $('po-mesi'); if (!box) return; box.textContent = '';
+    var C = leggiChiusure(), mesi = Object.keys(C).sort().reverse(); if (!mesi.length) return;
+    box.appendChild(el('div', 'po-sett', 'Mesi chiusi'));
+    mesi.forEach(function (ym) {
+      var c = C[ym], riga = el('div', 'po-mese'), testo = el('div', '', nomeMese(ym) + ' · ' + num(c.ore) + ' h · ' + c.gg + ' gg');
+      testo.appendChild(el('span', 'q', c.inviato_il ? 'inviato il ' + CO.oraIt(c.inviato_il) : c.salvato_il ? 'fra i download dal ' + CO.oraIt(c.salvato_il) + ', non ancora inviato' : 'non ancora inviato'));
+      riga.appendChild(testo);
+      var b = el('button', 'btn', c.inviato_il ? 'Manda di nuovo' : 'Manda a te stesso'); b.type = 'button'; b.onclick = function () { mandaMese(ym); };
+      riga.appendChild(b); box.appendChild(riga);
+    });
+  }
+  var chiusuraInCorso = false;
+  async function controllaChiusure() {
+    if (chiusuraInCorso) return; chiusuraInCorso = true;
+    try {
+      var mesi = mesiDaChiudere();
+      for (var i = 0; i < mesi.length; i++) { chiudiMese(mesi[i]); if (i === mesi.length - 1) await salvaMeseSulTelefono(mesi[i]); }
+      // il calcolo segue il mese in corso quando il mese collegato è chiuso e quello nuovo ha già dei turni
+      var link = localStorage.getItem('gpg_link') || '', oggi = ymOggi(), usa = R.usaNelCalcolo || window.usaNelCalcolo;
+      if (mesi.length && link && link < oggi && giorniDelMese(oggi).length && typeof usa === 'function') usa(oggi, true);
+      var C = leggiChiusure(), daMandare = Object.keys(C).filter(function (ym) { return !C[ym].inviato_il; }).sort().pop();
+      if (daMandare) avvisoMese(daMandare, C[daMandare]);
+      renderMesi();
+    } finally { chiusuraInCorso = false; }
+  }
+
   var ultimoGiro = 0;
   async function aggiorna() {
     if (!CO.credenziali()) { vista('accesso'); return; }
@@ -164,6 +304,7 @@
     if (e && e.scritti) t += ' · registro: ' + e.scritti + (e.scritti === 1 ? ' giorno segnato' : ' giorni segnati');
     if (r.ricevute) t += ' · ' + (r.ricevute === 1 ? '1 copia arrivata' : r.ricevute + ' copie arrivate') + ' dal guardiano';
     stato(t + ' ✓');
+    await controllaChiusure();
     if (r.altre) aggiorna();                       // ne restano altre nella cassetta: un altro giro le porta giù
   }
 
@@ -171,6 +312,7 @@
     var codice = $('po-codice').value.trim().toUpperCase(), password = $('po-password').value;
     if (!codice || !password) { $('po-acc-msg').textContent = 'Scrivi codice e password.'; return; }
     CO.salvaCredenziali(codice, password);
+    if (!localStorage.getItem(KEY_COLLEGATO)) localStorage.setItem(KEY_COLLEGATO, ymOggi());
     $('po-password').value = ''; $('po-acc-msg').textContent = '';
     aggiorna();
   };
@@ -184,6 +326,9 @@
   });
 
   vista(CO.credenziali() ? 'dentro' : 'accesso');
-  disegna().then(function (U) { var e = importa(U); return e && e.scritti ? disegna() : U; }).then(function () { if (CO.credenziali()) aggiorna(); });
-  window.RuolinoPortale = { disegna: disegna, aggiorna: aggiorna, ultime: ultime };
+  if (CO.credenziali() && !localStorage.getItem(KEY_COLLEGATO)) localStorage.setItem(KEY_COLLEGATO, ymOggi());   // collegato con una versione precedente
+  disegna().then(function (U) { var e = importa(U); return e && e.scritti ? disegna() : U; })
+    .then(function () { return controllaChiusure(); })
+    .then(function () { if (CO.credenziali()) aggiorna(); });
+  window.RuolinoPortale = { disegna: disegna, aggiorna: aggiorna, ultime: ultime, controllaChiusure: controllaChiusure, pdfMese: pdfMese, mandaMese: mandaMese, chiusure: leggiChiusure, mesiDaChiudere: mesiDaChiudere, disegnaMese: disegnaMese };
 })();

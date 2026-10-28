@@ -247,7 +247,7 @@
   window.ContaOre = {
     ponte: PONTE, isoLocale: isoLocale, sha256: sha256, leggiPagina: leggiPagina, copie: copie, leggibili: leggibili, salvaCopia: salvaCopia, aggiungi: aggiungi, aggiorna: aggiorna, spiega: spiega,
     firma: firma, orario: orario, storia: storia, giorno: giorno, oraIt: oraIt, ore: ore,
-    immagine: immagine, disegnaCopia: disegnaCopia, pdfDaImmagini: pdfDaImmagini, invia: invia, esportaPDF: esportaPDF,
+    immagine: immagine, disegnaCopia: disegnaCopia, jpeg: jpeg, pdfDaImmagini: pdfDaImmagini, invia: invia, esportaPDF: esportaPDF,
     credenziali: function () { return mem.get('cred'); },
     salvaCredenziali: function (codice, password) { mem.set('cred', { codice: codice, password: password }); mem.del('sessione'); },
     esci: function () { mem.del('cred'); mem.del('sessione'); }
