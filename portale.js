@@ -185,7 +185,7 @@
     g.fillText(num(c.ore) + ' ore · ' + c.gg + ' giorni · ' + c.notti + ' notti' + (c.fest ? ' · ' + num(c.fest) + ' h festive' : '') + (c.ferie ? ' · ' + c.ferie + ' ferie o permessi' : ''), 48, 215);
     if (c.netto != null) { g.font = '400 30px system-ui,sans-serif'; g.fillText('Netto stimato dal Ruolino: ' + Math.round(c.netto).toLocaleString('it-IT') + ' €', 48, 262); }
     g.fillStyle = '#475569'; g.font = '600 24px system-ui,sans-serif';
-    g.fillText('GIORNO', 48, 340); g.fillText('ORARIO', 220, 340); g.fillText('ORE', 560, 340); g.fillText('POSTO', 660, 340); g.fillText('FONTE', 1000, 340);
+    g.fillText('GIORNO', 48, 340); g.fillText('ORARIO', 220, 340); g.fillText('ORE', 560, 340); g.fillText('POSTO', 660, 340); g.fillText('FONTE', 975, 340);
     var y = top, FONTE = { portale: 'P', pdf: 'F', man: 'M', rot: 'R' };
     for (var d = 1; d <= nGiorni; d++) {
       var s = ym + '-' + due(d), r = reg[s], con = haDati(r);
