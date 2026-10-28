@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<title>Ruolino</title>
+<title>Ruolino Paga</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root{
@@ -305,7 +305,7 @@ html[data-edizione="istituzionale"] [data-goliardia]{display:none!important}
       <path d="M12.5 33.5h19M14.5 37.4h15M16.5 41.2h11" stroke="#c9a227" stroke-width="1.9" stroke-linecap="round" opacity=".9"/>
     </svg>
     <div class="titolo">
-      <h1 data-serio="Ruolino">Ruolino Paga</h1>
+      <h1>Ruolino Paga</h1>
       <p data-serio="Turni, ore e retribuzione · Guardie Particolari Giurate">Registro di servizio e retribuzione · Guardie Particolari Giurate</p>
     </div>
     <button type="button" class="garitta-btn" id="garitta" aria-pressed="false" title="Modalità garitta: rosso scuro per la notte">Garitta</button>
@@ -360,7 +360,7 @@ html[data-edizione="istituzionale"] [data-goliardia]{display:none!important}
   <!-- SERVIZIO -->
   <div id="p-r" role="tabpanel" aria-labelledby="t-r">
     <div class="card" id="arr" hidden>
-      <h3 data-serio="Impostazione">Arruolamento</h3>
+      <h3 data-serio="Per iniziare">Arruolamento</h3>
       <div class="b">
         <p style="margin:0 0 10px;font-size:14px" data-serio="Tre domande per impostare il calcolo.">Benvenuto. Tre domande e il Ruolino è tuo.</p>
         <div class="f">
@@ -405,7 +405,7 @@ html[data-edizione="istituzionale"] [data-goliardia]{display:none!important}
             <button type="button" data-ore="350">350</button>
             <button type="button" data-ore="400">400</button>
           </div>
-          <div class="hint">Solo ore di servizio effettivo. Se non le hai contate, metti una cifra tonda: la stima si muove di conseguenza. Se le segni nel Ruolino, arrivano da sole.</div>
+          <div class="hint">Solo ore di servizio effettivo. Se non le hai contate, metti una cifra tonda: la stima si muove di conseguenza. Se le segni nella scheda <span data-serio="Turni">Ruolino</span>, arrivano da sole.</div>
           <div class="hint" id="ore-ruolino" hidden style="margin-top:6px;color:var(--ink-2)"></div>
         </div>
         <div class="g2" style="margin-top:13px">
@@ -1022,8 +1022,8 @@ html[data-edizione="istituzionale"] [data-goliardia]{display:none!important}
 
   <!-- CASERMA -->
   <div id="p-k" role="tabpanel" aria-labelledby="t-k" hidden>
-    <div class="card" id="bacheca-card" hidden data-goliardia>
-      <h3>Bacheca del Comando</h3>
+    <div class="card" id="bacheca-card" hidden>
+      <h3 data-serio="Novità">Bacheca del Comando</h3>
       <div class="b"><ul class="bacheca" id="bacheca"></ul></div>
     </div>
 
@@ -1797,7 +1797,7 @@ function renderEd(){
   const ed=$('ed'); if(!CAL.sel){ ed.hidden=true; return; } ed.hidden=false;
   const s=CAL.sel, d=daYmd(s), r=REG[s];
   $('ed-titolo').textContent=GN[wd(d)]+' '+d.getDate()+' '+NM[d.getMonth()]+' '+d.getFullYear();
-  $('ed-fonte').textContent=r?(r.src==='pdf'?'dal foglio di servizio':r.src==='rot'?'dalla rotazione':'segnato a mano'):'';
+  $('ed-fonte').textContent=r?(r.src==='pdf'?'dal foglio di servizio':r.src==='portale'?'dal portale dei turni':r.src==='rot'?'dalla rotazione':'segnato a mano'):'';
   const ul=$('ed-turni'); ul.innerHTML='';
   (r?r.t:[]).forEach((t,i)=>{
     const li=document.createElement('li');
@@ -1960,7 +1960,7 @@ $('tb-foto').onchange=e=>{ TB.foto=(e.target.files&&e.target.files[0])||null; $(
 function codice(s){ let h=0x811c9dc5; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } return ('00000000'+h.toString(16).toUpperCase()).slice(-6); }
 function testoTurno(){
   const d=daYmd(TB.d), ob=$('tb-ob').value.trim();
-  let t=`🛡️ RUOLINO PAGA\n${TB.tipo} · ${GN[wd(d)].slice(0,3)} ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} · ore ${TB.ora}`;
+  let t=`${SERIO?'RUOLINO PAGA':'🛡️ RUOLINO PAGA'}\n${TB.tipo} · ${GN[wd(d)].slice(0,3)} ${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} · ore ${TB.ora}`;
   if(ob) t+=`\nPosto: ${ob}`;
   if(TB.pos) t+=`\nPosizione (±${TB.pos.acc} m): https://maps.google.com/?q=${TB.pos.lat.toFixed(5)},${TB.pos.lon.toFixed(5)}`;
   t+=`\nCod. ${codice(TB.tipo+TB.d+TB.ora+ob+(TB.pos?TB.pos.lat.toFixed(5)+','+TB.pos.lon.toFixed(5):''))}`;
@@ -2028,18 +2028,22 @@ function regDaTurniPortale(turni){
   const perData={}, out={};
   (Array.isArray(turni)?turni:[]).forEach(t=>{ const d=String(t&&t.data||''); if(/^\d{4}-\d{2}-\d{2}$/.test(d)) (perData[d]=perData[d]||[]).push(t); });
   Object.keys(perData).forEach(d=>{
-    const rec={t:[],s:'',ob:'',src:'pdf'};
+    const rec={t:[],s:'',ob:'',src:'portale'};
     perData[d].forEach(t=>{
       const tipo=String(t.tipoGiornata||'').toUpperCase();
-      if(tipo==='TURNO'){ const i=oraOk(t.oraInizio), f=oraOk(t.oraFine); if(i&&f&&i!==f) rec.t.push({i,f,k:'p'}); }
+      if(tipo==='TURNO'){ const i=oraOk(t.oraInizio), f=oraOk(t.oraFine), min=+t.minutiTurno||0;
+        if(i&&f&&i!==f) rec.t.push({i,f,k:'p'});
+        else if(min>=60){ rec.o=(rec.o||0)+Math.round(min/6)/10; if(min>=1440) rec.n=true; }   // senza orari distinti (24 ore) valgono i minuti dichiarati
+      }
       else if(/RIPOSO/.test(tipo)) rec.s='riposo'; else if(/FERIE/.test(tipo)) rec.s='ferie';
       else if(/PERMESS/.test(tipo)) rec.s='permesso'; else if(/MALATT/.test(tipo)) rec.s='malattia';
     });
-    if(rec.t.length) rec.s='';
-    if(rec.t.length||rec.s) out[d]=rec;
+    if(rec.t.length||rec.o>0) rec.s='';
+    if(rec.t.length||rec.o>0||rec.s) out[d]=rec;
   });
   return out;
 }
+const chiaveGiorno=r=>JSON.stringify({t:r.t||[],s:r.s||'',o:r.o>0?r.o:0,n:!!r.n});
 /* i giorni segnati a mano non si toccano */
 function importaTurniPortale(turni){
   const nuovi=regDaTurniPortale(turni);
@@ -2048,8 +2052,8 @@ function importaTurniPortale(turni){
     const cur=REG[d]; if(cur&&cur.src==='man'){ mano++; return; }
     const rec=nuovi[d]; rec.ob=cur?(cur.ob||''):'';
     if(cur&&typeof cur.fest==='boolean') rec.fest=cur.fest;
-    const prima=cur?JSON.stringify({t:cur.t,s:cur.s}):null;
-    if(prima===JSON.stringify({t:rec.t,s:rec.s})) return;
+    const prima=cur?chiaveGiorno(cur):null;
+    if(prima===chiaveGiorno(rec)) return;
     if(prima) cambiati++;
     REG[d]=rec; scritti++; mesi[d.slice(0,7)]=true;
   });
@@ -2071,24 +2075,27 @@ $('file').onchange=e=>{ leggiPDF(Array.prototype.slice.call(e.target.files)); e.
 drop.addEventListener('drop',e=>leggiPDF(Array.prototype.slice.call(e.dataTransfer.files).filter(f=>/pdf$/i.test(f.name))));
 
 /* ---- copia di sicurezza ---- */
-$('bk-esporta').onclick=()=>{
-  const ok=scarica(new Blob([backupJSON()],{type:'application/json'}),'ruolino-paga-'+oggi()+'.json');
+$('bk-esporta').onclick=async()=>{
+  const ok=scarica(new Blob([await backupTesto()],{type:'application/json'}),'ruolino-paga-'+oggi()+'.json');
   $('bk-msg').textContent = ok ? 'File salvato fra i download: tienilo da parte.' : 'Questo browser non fa scaricare il file.';
   if(ok) segnaBackup();
 };
 $('bk-file').onchange=e=>{
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=()=>{
+  rd.onload=async()=>{
     try{
       const data=JSON.parse(rd.result); if(!data||data.app!=='ruolino-paga') throw new Error('non è un file del Ruolino');
       const conBuste=!!(data.buste&&typeof data.buste==='object'&&!Array.isArray(data.buste));   // le copie vecchie non hanno le buste: l'archivio resta com'è
-      if(!confirm(conBuste?'Sostituisco registro, profili, valori e buste con quelli del file?':'Sostituisco registro, profili e valori con quelli del file?')) return;
+      const conCopie=Array.isArray(data.copie_portale)&&!!(window.ContaOre&&ContaOre.aggiungi);
+      if(!confirm((conBuste?'Sostituisco registro, profili, valori e buste con quelli del file?':'Sostituisco registro, profili e valori con quelli del file?')+(conCopie?' Le copie del portale si aggiungono, non si cancellano.':''))) return;
       REG=data.registro||{}; salvaReg(); if(data.profili) scriviProfili(data.profili); if(data.campi) applicaCampi(data.campi);
       APERTO=data.aperto||null; lsSet(KEY_APERTO,JSON.stringify(APERTO)); lsSet(KEY_LINK,data.link||''); lsSet(KEY_OB,data.ob||'');
       aggiornaSelect(lsGet('gpg_ultimo','')); aggiornaSpunta8(); aggiornaOraria(true); renderTb(); renderCal(); calcola(); renderScadenze(); caricaRel();
       if(conBuste){ lsSet(KEY_BUSTE,JSON.stringify(data.buste)); BS_SEL=null; renderBuste(); }
-      $('bk-msg').textContent='Copia di sicurezza caricata.';
+      let nCopie=0;
+      if(conCopie){ for(const c of data.copie_portale){ if(c&&c.salvata_il&&c.html){ try{ if(await ContaOre.aggiungi(c)) nCopie++; }catch(err){} } } if(window.RuolinoPortale) RuolinoPortale.disegna(); }
+      $('bk-msg').textContent='Copia di sicurezza caricata.'+(nCopie?` Aggiunte ${nCopie} copie del portale.`:'');
     }catch(err){ $('bk-msg').textContent='Questo file non è una copia di sicurezza del Ruolino.'; }
   };
   rd.readAsText(f); e.target.value='';
@@ -2144,7 +2151,7 @@ $('c-reset').onclick=()=>{ for(const k in BASE_IST) if($(k)) $(k).value=BASE_IST
   msgProf('Valori predefiniti ripristinati.'); calcola(); };
 
 /* ---- versione, indirizzo, contatore ---- */
-const VERSIONE='2026.10.28-1';
+const VERSIONE='2026.10.28-3';
 const SERIO=document.documentElement.getAttribute('data-edizione')==='istituzionale';
 if(SERIO) document.querySelectorAll('[data-serio]').forEach(el=>{ el.textContent=el.getAttribute('data-serio'); });
 const SITO=SERIO?location.origin+location.pathname.replace(/index\.html$/,''):'https://ruolino-paga.github.io/';
@@ -2238,19 +2245,21 @@ $('cal-ics').onclick=async()=>{
 
 /* ---- copia di sicurezza e reclami ---- */
 function backupJSON(){ return JSON.stringify({app:'ruolino-paga',v:1,quando:new Date().toISOString(),campi:statoCampi(),profili:leggiProfili(),registro:REG,buste:leggiBuste(),aperto:APERTO,link:lsGet(KEY_LINK,''),ob:lsGet(KEY_OB,'')}); }
+/* nell'edizione collegata al portale la copia porta anche le copie delle pagine del portale */
+async function backupTesto(){ const d=JSON.parse(backupJSON()); if(window.ContaOre&&ContaOre.copie){ try{ d.copie_portale=await ContaOre.copie(); }catch(e){} } return JSON.stringify(d); }
 $('bk-manda').onclick=async()=>{
-  const nome='ruolino-paga-'+oggi()+'.json'; let r=null;
-  try{ r=await condividi({title:'Copia di sicurezza Ruolino Paga',files:[new File([backupJSON()],nome,{type:'application/json'})]}); }catch(e){}
+  const nome='ruolino-paga-'+oggi()+'.json', testo=await backupTesto(); let r=null;
+  try{ r=await condividi({title:'Copia di sicurezza Ruolino Paga',files:[new File([testo],nome,{type:'application/json'})]}); }catch(e){}
   if(r==='share'){ segnaBackup(); $('bk-msg').textContent='Copia inviata: mandala a te stesso su WhatsApp o su Drive.'; return; }
   if(r==='abort') return;
-  const ok=scarica(new Blob([backupJSON()],{type:'application/json'}),nome);
+  const ok=scarica(new Blob([testo],{type:'application/json'}),nome);
   $('bk-msg').textContent=ok?'Questo browser non condivide i file: l\'ho scaricato, mandalo tu.':'Questo browser non fa scaricare il file.';
   if(ok) segnaBackup();
 };
 async function reclamo(){
-  const t=`${SERIO?'Segnalazione · Ruolino':'Reclamo al Comando · Ruolino Paga'} v${VERSIONE} · ${(navigator.userAgent.match(/\(([^)]+)\)/)||['',''])[1].slice(0,60)}\nCosa non va: `;
+  const t=`${SERIO?'Segnalazione · Ruolino Paga':'Reclamo al Comando · Ruolino Paga'} v${VERSIONE} · ${(navigator.userAgent.match(/\(([^)]+)\)/)||['',''])[1].slice(0,60)}\nCosa non va: `;
   const r=await condividi({title:SERIO?'Segnalazione':'Reclamo al Comando',text:t}); if(r==='share'||r==='abort') return;
-  msgProf((await copiaTesto(t))?'Testo del reclamo copiato: incollalo nel gruppo.':'Non riesco a copiare da qui.');
+  msgProf((await copiaTesto(t))?(SERIO?'Testo copiato: incollalo nel gruppo.':'Testo del reclamo copiato: incollalo nel gruppo.'):'Non riesco a copiare da qui.');
 }
 
 /* ---- busta voce per voce ---- */
@@ -2498,7 +2507,7 @@ function renderScadenze(){
     const pill=x.stato==='ko'?`<span class="pill ko">scaduta da ${-x.g} gg</span>`:x.stato==='att'?`<span class="pill att">fra ${x.g} gg</span>`:'<span class="pill ok">in regola</span>';
     return `<li><span>${esc(x.nome)}<small>${x.s.mesi?'prossima entro il ':'scade il '}${dataIt(x.d)}${x.stato!=='ok'?' · '+x.s.consiglio:''}</small></span>${pill}</li>`; }).join('');
   const tutte=['decreto','porto','tiro'].every(id=>L.some(x=>x.s.id===id)), ok=L.length&&L.every(x=>x.stato==='ok');
-  $('sc-msg').textContent=!L.length?'Metti le date che trovi sul decreto, sul porto e sul libretto di tiro.':(tutte&&ok?'Tutto in regola. Il Prefetto dorme sonni tranquilli, tu un po’ meno.':'');
+  $('sc-msg').textContent=!L.length?'Metti le date che trovi sul decreto, sul porto e sul libretto di tiro.':(tutte&&ok?(SERIO?'Tutto in regola.':'Tutto in regola. Il Prefetto dorme sonni tranquilli, tu un po’ meno.'):'');
   // in cima all'app, quello che scade entro un mese o è già scaduto
   const vivi=[];
   L.forEach(x=>{ if(!(x.stato==='ko'||x.g<=30)) return; const id='scad-'+x.s.id+'-'+ymd(x.d); vivi.push(id);
@@ -2635,12 +2644,12 @@ function renderUsuranti(){
   const fascia=v=>v>=78?'<span class="pill ok">78 o più</span>':v>=72?'<span class="pill att">da 72 a 77</span>':v>=64?'<span class="pill att">da 64 a 71</span>':'<span class="pill">sotto 64</span>';
   $('usu-anni').innerHTML=anni.length
     ? '<tr class="sub"><td>Anno</td><td>Notti valide</td></tr>'+anni.map(y=>`<tr><td>${y}${y===attuale?' <span class="q">in corso</span>':''}</td><td>${A[y].notti} ${fascia(A[y].notti)}</td></tr>`).join('')
-    : '<tr><td>Ancora nessun turno: segna i turni con l’orario nel Ruolino.</td><td></td></tr>';
+    : `<tr><td>Ancora nessun turno: segna i turni con l’orario nella scheda ${SERIO?'Turni':'Ruolino'}.</td><td></td></tr>`;
 }
 
 /* ---- bacheca del Comando: avvisi scritti nel file bacheca.json del sito ---- */
 async function caricaBacheca(){
-  if(SERIO||!/^https?:$/.test(location.protocol)) return;
+  if(!/^https?:$/.test(location.protocol)) return;
   try{
     const r=await fetch('bacheca.json',{cache:'no-cache'}); if(!r.ok) return;
     const b=await r.json(), L=(b&&Array.isArray(b.avvisi))?b.avvisi.slice(0,8):[]; if(!L.length) return;
@@ -2648,7 +2657,7 @@ async function caricaBacheca(){
     $('bacheca-card').hidden=false;
     const primo=L[0], id='bacheca-'+(primo.id||primo.data||'');
     if(!GIA_USATO){ if(!avvisoChiuso(id,3650)) chiudiAvviso(id); return; }   // a chi arriva adesso le novità non servono
-    if(primo.evidenza&&!avvisoChiuso(id,3650)) mostraAvviso(id,'Bacheca del Comando: '+esc(primo.testo||''),[{t:'Vedi',f:()=>{ chiudiAvviso(id); mostraTab('t-k'); inCima(); }},{t:'Chiudi',f:()=>chiudiAvviso(id)}]);
+    if(primo.evidenza&&!avvisoChiuso(id,3650)) mostraAvviso(id,(SERIO?'Novità: ':'Bacheca del Comando: ')+esc(primo.testo||''),[{t:'Vedi',f:()=>{ chiudiAvviso(id); mostraTab('t-k'); inCima(); }},{t:'Chiudi',f:()=>chiudiAvviso(id)}]);
   }catch(e){}
 }
 
@@ -3015,8 +3024,7 @@ calcola();
 renderTb();
 renderCal();
 { const l=lsGet(KEY_LINK,''); if(l&&/^\d{4}-\d{2}$/.test(l)) usaNelCalcolo(l,true); }   // se il calcolo segue il ruolino, riparte da lì
-$('versione').innerHTML=SERIO?`Ruolino · versione ${VERSIONE} · <button type="button" class="lnk" id="reclami" style="color:inherit">Segnala un problema</button>`
-  :`Ruolino Paga · versione ${VERSIONE} · <a href="${SITO}" style="color:inherit">ruolino-paga.github.io</a> · <button type="button" class="lnk" id="reclami" style="color:inherit">Reclami al Comando</button>`;
+$('versione').innerHTML=`Ruolino Paga · versione ${VERSIONE} · <a href="${SITO}" style="color:inherit">${esc(SITO.replace(/^https?:\/\//,'').replace(/\/$/,''))}</a> · <button type="button" class="lnk" id="reclami" style="color:inherit">${SERIO?'Segnala un problema':'Reclami al Comando'}</button>`;
 $('reclami').onclick=reclamo;
 if(CONTATORE && !SERIO && /^https?:$/.test(location.protocol)){ const s=document.createElement('script'); s.async=true; s.src='https://gc.zgo.at/count.js'; s.setAttribute('data-goatcounter','https://'+CONTATORE+'.goatcounter.com/count'); document.head.appendChild(s); $('nota-contatore').hidden=false; }
 leggiHash();
@@ -3041,7 +3049,7 @@ caricaBacheca();
 window.RP={inflateJS,inflateBytes,frammenti,foglio,leggiPDF,riepilogo,FRASI,GRADI,pasqua,festivo,reg:()=>REG,
   motore,leggiInput,tabella,carriera,livelloAl,scattiAl,orariaPer,aggiornaOraria,nettoDaRegistro,valoreTurno,
   detrConiuge,detrFigli,statoScadenze,icsScadenze,oreNotturne,nottiUsuranti,testoRelazione,SCUSE,MOSTRINE,statoServizio,
-  leggiCiclo,QUIZ,statoAnno,foglioMatricolare,leggiBusta,inputDaBusta,stimaBusta,leggiBuste,renderBuste,caricaBuste,pulisciBusta,usaBusta,altreVoci,stimaConExtra,importaTurniPortale,regDaTurniPortale,valTraPer};
+  leggiCiclo,QUIZ,statoAnno,foglioMatricolare,leggiBusta,inputDaBusta,stimaBusta,leggiBuste,renderBuste,caricaBuste,pulisciBusta,usaBusta,altreVoci,stimaConExtra,importaTurniPortale,regDaTurniPortale,valTraPer,backupTesto};
 /* installabile e utilizzabile senza rete: solo quando la pagina arriva da un indirizzo, non da un file */
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });

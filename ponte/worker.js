@@ -77,18 +77,20 @@ export default {
     if (!P) return json({ ok: false, motivo: 'ponte non configurato' }, req, env, 500);
     let d;
     try { d = await req.json(); } catch (e) { return json({ ok: false, motivo: 'richiesta non valida' }, req, env, 400); }
-    const codice = String(d.codice || '').slice(0, 40), password = String(d.password || '').slice(0, 200);
+    // il codice è normalizzato una volta sola: lo stesso valore va al portale e al conto dei tentativi
+    const codice = String(d.codice || '').trim().toUpperCase().slice(0, 40), password = String(d.password || '').slice(0, 200);
+    if (codice && !/^[A-Z0-9][A-Z0-9._-]*$/.test(codice)) return json({ ok: false, motivo: 'credenziali' }, req, env);
     let sessione = String(d.sessione || '').slice(0, 4000), nuovoAccesso = false;
     try {
       let t = sessione ? await turni(P, sessione) : { ok: false, scaduta: true };
       if (!t.ok && t.scaduta) {
         if (!codice || !password) return json({ ok: false, motivo: 'accesso' }, req, env);
-        const ip = 'ip:' + (req.headers.get('cf-connecting-ip') || '?'), cod = 'codice:' + codice.toUpperCase();
+        const ip = 'ip:' + (req.headers.get('cf-connecting-ip') || '?'), cod = 'codice:' + codice;
         if (troppi(cod, 5) || troppi(ip, 20)) return json({ ok: false, motivo: 'troppi tentativi' }, req, env, 429);
         conta(ip); conta(cod);                     // si conta prima: richieste in parallelo non scavalcano il limite
         const a = await accedi(P, codice, password);
         if (!a.ok) { if (a.motivo !== 'credenziali') sconta(cod); return json({ ok: false, motivo: a.motivo }, req, env); }
-        TENTATIVI.delete(cod);
+        sconta(cod);                               // riuscito: si toglie solo questo tentativo
         sessione = a.sessione; nuovoAccesso = true;
         t = await turni(P, sessione);
         if (!t.ok) return json({ ok: false, motivo: t.scaduta ? 'accesso non riuscito' : 'portale non disponibile (' + t.stato + ')' }, req, env);

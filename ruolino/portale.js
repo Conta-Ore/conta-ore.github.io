@@ -98,20 +98,29 @@
     var h = '<tr class="sub"><td>Mese</td><td>Portale</td><td>Registro</td><td>Busta</td></tr>';
     elenco.forEach(function (ym) {
       var giorniP = Object.keys(regP).filter(function (d) { return d.slice(0, 7) === ym; });
-      var oreP = giorniP.length ? R.riepilogo(ym, regP).ore : null;
+      // il portale dichiara i minuti di ogni turno: sono quelli che l'istituto conta; gli orari li ricontano con la regola del registro
+      var minP = 0, conMinuti = true;
+      U.turni.forEach(function (t) {
+        if (String(t.data).slice(0, 7) !== ym || String(t.tipoGiornata || '').toUpperCase() !== 'TURNO') return;
+        if (+t.minutiTurno > 0) minP += t.minutiTurno / 60; else conMinuti = false;
+      });
+      var oreOrari = giorniP.length ? R.riepilogo(ym, regP).ore : null;
+      var oreP = giorniP.length ? (conMinuti ? minP : oreOrari) : null;
       var oreR = R.riepilogo(ym).ore;
       var B = buste[ym], oreB = B ? R.inputDaBusta(B).ore : null;
-      // sugli stessi giorni, registro e portale devono coincidere: se no, ci sono giorni segnati a mano
+      // sugli stessi giorni, registro e orari del portale devono coincidere: se no, ci sono giorni segnati a mano
       var stessi = {}; giorniP.forEach(function (d) { if (reg[d]) stessi[d] = reg[d]; });
       var oreRP = giorniP.length ? R.riepilogo(ym, stessi).ore : null;
-      var dRP = oreP != null && Math.abs(oreRP - oreP) >= 0.05, dRB = oreB != null && Math.abs(oreR - oreB) >= 0.5;
+      var dPM = oreP != null && Math.abs(oreP - oreOrari) >= 0.05;
+      var dRP = oreOrari != null && Math.abs(oreRP - oreOrari) >= 0.05, dRB = oreB != null && Math.abs(oreR - oreB) >= 0.5;
       var nome = MESI[+ym.slice(5, 7) - 1] + ' ' + ym.slice(0, 4);
-      h += '<tr><td>' + nome + '</td><td' + (dRP ? ' class="diff"' : '') + '>' + (oreP == null ? '—' : num(oreP) + ' h') + '</td><td' + (dRP || dRB ? ' class="diff"' : '') + '>' + num(oreR) + ' h</td><td' + (dRB ? ' class="diff"' : '') + '>' + (oreB == null ? '—' : num(oreB) + ' h') + '</td></tr>';
-      if (giorniP.length) note.push(nome + ': portale su ' + giorniP.length + (giorniP.length === 1 ? ' giorno' : ' giorni') + (dRP ? ', dove il registro ha ' + num(oreRP) + ' h' : ''));
+      h += '<tr><td>' + nome + '</td><td' + (dPM ? ' class="diff"' : '') + '>' + (oreP == null ? '—' : num(oreP) + ' h') + '</td><td' + (dRP || dRB ? ' class="diff"' : '') + '>' + num(oreR) + ' h</td><td' + (dRB ? ' class="diff"' : '') + '>' + (oreB == null ? '—' : num(oreB) + ' h') + '</td></tr>';
+      if (giorniP.length) note.push(nome + ': portale su ' + giorniP.length + (giorniP.length === 1 ? ' giorno' : ' giorni') + (dRP ? ', dove il registro ha ' + num(oreRP) + ' h (giorni segnati a mano)' : ''));
+      if (dPM) note.push(nome + ': il portale dichiara ' + num(oreP) + ' h, dagli orari risultano ' + num(oreOrari) + ' h');
       if (dRB) note.push(nome + ': la busta paga ' + num(oreB) + ' h, il registro ne ha ' + num(oreR) + ' (' + (oreR > oreB ? '+' : '') + num(oreR - oreB) + ' h)');
     });
     tab.innerHTML = h;
-    $('po-nota').textContent = 'Portale: l’ultima versione di ogni giorno salvato. Registro: le ore segnate nel mese. Busta: le ore pagate, lette dal PDF.' + (note.length ? ' ' + note.join(' · ') + '.' : '');
+    $('po-nota').textContent = 'Portale: le ore dichiarate dal portale, ultima versione di ogni giorno salvato. Registro: le ore segnate nel mese. Busta: le ore pagate, lette dal PDF.' + (note.length ? ' ' + note.join(' · ') + '.' : '');
 
     var cambiati = Object.keys(U.storia).filter(function (d) { return U.storia[d].length > 1; }).sort().reverse(), box = $('po-var');
     box.textContent = '';

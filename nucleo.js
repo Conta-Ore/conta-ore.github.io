@@ -119,7 +119,8 @@
     return inCorso;
   }
   var TESTI = { accesso: 'Serve il codice operatore.', servizio: 'Servizio non ancora attivo.', rete: 'Senza connessione: restano i turni dell’ultima copia.',
-    credenziali: 'Codice o password sbagliati.', pagina: 'Il portale ha cambiato la pagina: la copia è salvata, ma i turni non riesco a leggerli.', 'troppi tentativi': 'Troppi tentativi: riprova tra un quarto d’ora.' };
+    credenziali: 'Codice o password sbagliati.', pagina: 'Il portale ha cambiato la pagina: la copia è salvata, ma i turni non riesco a leggerli.', 'troppi tentativi': 'Troppi tentativi: riprova tra un quarto d’ora.',
+    'ponte non configurato': 'Il collegamento al portale non è ancora attivo: riprova più tardi.', 'sito non ammesso': 'Questa copia dell’app non è quella ufficiale.' };
   function spiega(motivo) { return TESTI[motivo] || ('Il portale non risponde (' + motivo + '). Riprova più tardi.'); }
 
   /* storia di ogni giorno attraverso le copie: le versioni diverse, con la prima volta che sono state viste */
@@ -131,6 +132,7 @@
       Object.keys(perData).forEach(function (d) {
         var f = perData[d].map(firma).join(' + '), s = S[d] = S[d] || [];
         if (!s.length || s[s.length - 1].f !== f) s.push({ f: f, quando: c.salvata_il, turni: perData[d] });
+        else s[s.length - 1].turni = perData[d];   // stessi orari e servizio: valgono i dati dell'ultima copia (minuti, note, indirizzo)
       });
     });
     return S;
@@ -191,7 +193,7 @@
   }
 
   window.ContaOre = {
-    ponte: PONTE, isoLocale: isoLocale, sha256: sha256, leggiPagina: leggiPagina, copie: copie, leggibili: leggibili, salvaCopia: salvaCopia, aggiorna: aggiorna, spiega: spiega,
+    ponte: PONTE, isoLocale: isoLocale, sha256: sha256, leggiPagina: leggiPagina, copie: copie, leggibili: leggibili, salvaCopia: salvaCopia, aggiungi: aggiungi, aggiorna: aggiorna, spiega: spiega,
     firma: firma, orario: orario, storia: storia, giorno: giorno, oraIt: oraIt, ore: ore,
     immagine: immagine, invia: invia, esportaArchivio: esportaArchivio,
     credenziali: function () { return mem.get('cred'); },

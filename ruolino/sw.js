@@ -1,5 +1,5 @@
 /* Ruolino istituzionale — service worker: la pagina si apre anche senza rete, gli aggiornamenti arrivano alla prima apertura con la rete. */
-const CACHE = 'ruolino-ist-2026.10.28-1';
+const CACHE = 'ruolino-ist-2026.10.28-3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png', './portale.js', '../config.js', '../nucleo.js'];
 
 self.addEventListener('install', e => {

@@ -1,7 +1,11 @@
-# Conta Ore · Salva turni
+# Conta Ore
 
-Salva i tuoi turni dal portale con un tocco: una foto della pagina dei turni con gli orari, da tenere e da mandare su WhatsApp o per email.
+Un'app web, senza installazione, che salva sul telefono una copia dei turni pubblicati sul portale dell'istituto: ogni versione con data, ora e impronta della pagina originale. Le copie restano sul telefono e si possono mandare su WhatsApp o per email.
 
-Istruzioni: https://conta-ore.github.io/
+- `index.html`, `app.js`: l'app.
+- `nucleo.js`: lettura del portale, archivio delle copie (solo aggiunte, mai sovrascritte), immagine di prova, invio.
+- `ponte/worker.js`: il ponte (Cloudflare Worker) che passa al portale le richieste dell'app e non salva niente. L'indirizzo del portale sta in una variabile, non nel codice pubblico.
+- `ruolino/`: il Ruolino Paga collegato ai turni del portale, generato da `strumenti/costruisci-ruolino.py` dalla sorgente del Ruolino pubblico; `ruolino/portale.js` segna i turni nel registro e confronta le ore del portale, del registro e della busta.
+- `st.js`: il vecchio segnalibro, lasciato per chi lo ha già.
 
-Tutto resta sul telefono. La foto della pagina usa [html-to-image](https://github.com/bubkoo/html-to-image) (licenza MIT, in `lib/`).
+Tutto gira nel browser del telefono. Codice operatore e password restano sul telefono e servono solo per entrare nel portale attraverso il ponte.

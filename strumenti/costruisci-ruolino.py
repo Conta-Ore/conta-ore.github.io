@@ -27,10 +27,9 @@ def sostituisci(testo, vecchio, nuovo, volte=1):
 def pagina():
     s = (SORGENTE / 'index.html').read_text(encoding='utf-8')
     versione = re.search(r"const VERSIONE='([^']+)'", s).group(1)
-    s = sostituisci(s, '<!doctype html>\n<html lang="it">',
+    s = sostituisci(s, '<!doctype html>\n<html lang="it" data-edizione="istituzionale">',
                     '<!doctype html>\n<!-- generato da strumenti/costruisci-ruolino.py dalla sorgente del Ruolino: non modificare a mano -->\n'
                     '<html lang="it" data-edizione="istituzionale">')
-    s = sostituisci(s, '<title>Ruolino Paga</title>', '<title>Ruolino</title>')
     s = sostituisci(s, '<meta name="description" content="Registro di servizio e stima della retribuzione per guardie particolari giurate. Tutto resta sul telefono.">',
                     '<meta name="description" content="Turni dal portale, registro delle ore e stima della retribuzione. Tutto resta sul telefono.">')
     s = sostituisci(s, '</body>', '<script src="../config.js"></script>\n<script src="../nucleo.js"></script>\n<script src="portale.js"></script>\n</body>')
@@ -42,7 +41,7 @@ def pagina():
 
 def manifesto():
     m = json.loads((SORGENTE / 'manifest.webmanifest').read_text(encoding='utf-8'))
-    m['name'] = 'Ruolino · turni, ore e paga'
+    m['name'] = 'Ruolino Paga · con i turni del portale'
     m['short_name'] = 'Ruolino'
     m['description'] = 'Turni dal portale, registro delle ore e stima della retribuzione. Tutto resta sul telefono.'
     for sc in m.get('shortcuts', []):
